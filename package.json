@@ -1,0 +1,18 @@
+{
+  "name": "myfitnesscomrade",
+  "version": "1.0.0",
+  "description": "MyFitnessComrade - Fitness tracking application",
+  "scripts": {
+    "install": "npm install --prefix server && npm install --prefix client",
+    "build": "npm run build --prefix client",
+    "start": "npm start --prefix server",
+    "dev:server": "npm start --prefix server",
+    "dev:client": "npm run dev --prefix client"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["fitness", "tracking"],
+  "author": "",
+  "license": "ISC"
+}
