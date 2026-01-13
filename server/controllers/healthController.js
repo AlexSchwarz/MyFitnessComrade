@@ -6,6 +6,21 @@ const getHealth = (req, res) => {
   });
 };
 
+const logValue = (req, res) => {
+  const { value } = req.body;
+
+  // Log to server console
+  console.log('Received value from client:', value);
+
+  // Return success response
+  res.json({
+    ok: true,
+    message: 'Value logged successfully',
+    received: value
+  });
+};
+
 module.exports = {
-  getHealth
+  getHealth,
+  logValue
 };
