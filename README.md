@@ -8,10 +8,11 @@ MyFitnessComrade is a modern calorie tracking application that helps users manag
 **Core Functionality:**
 - User authentication (email/password via Firebase Auth)
 - Set and edit daily calorie goals
-- Log meals with food name and calorie count
-- View today's meals with timestamps
+- Personal food library with calories per 100g
+- Log food entries with gram amounts (calories auto-calculated)
+- View today's entries with timestamps
+- Edit and delete entries
 - Real-time calorie totals and progress tracking
-- Delete meals
 - Color-coded progress indicators (green/yellow/red)
 - Persistent data storage in Firestore
 
@@ -50,7 +51,8 @@ Firebase Auth + Firestore
 ```
 MyFitnessComrade/
 ├── .gitignore
-├── package.json                    # Root scripts (primarily for Railway)
+├── package.json                    # Root scripts
+├── vercel.json                     # Vercel deployment configuration
 ├── README.md
 │
 └── client/                         # React application
@@ -69,7 +71,8 @@ MyFitnessComrade/
         │   └── firebase.js         # Firebase initialization (dev/prod switching)
         └── services/
             ├── firebase.js         # Auth helper functions
-            └── calories.js         # Calorie tracking functions
+            ├── calories.js         # Entry tracking functions
+            └── foods.js            # Food library functions
 ```
 
 ## Data Model
@@ -87,14 +90,27 @@ MyFitnessComrade/
 }
 ```
 
-**meals/{mealId}**
+**foods/{foodId}**
+```javascript
+{
+  userId: string,                 // Reference to user
+  name: string,                   // e.g., "Chicken Breast"
+  caloriesPer100g: number,        // e.g., 165
+  createdAt: timestamp,
+  updatedAt: timestamp
+}
+```
+
+**entries/{entryId}**
 ```javascript
 {
   userId: string,                 // Reference to user
   date: string,                   // YYYY-MM-DD format
-  foodName: string,               // e.g., "Chicken Breast"
-  calories: number,               // e.g., 350
-  mealTime: timestamp,            // When meal was logged
+  foodId: string,                 // Reference to food
+  foodName: string,               // Denormalized for display
+  grams: number,                  // Amount in grams
+  calories: number,               // Pre-calculated calories
+  entryTime: timestamp,           // When entry was logged
   createdAt: timestamp
 }
 ```
@@ -145,8 +161,15 @@ service cloud.firestore {
       allow read, write: if request.auth.uid == userId;
     }
 
-    // Users can only read/write/delete their own meals
-    match /meals/{mealId} {
+    // Users can only read/write/delete their own foods
+    match /foods/{foodId} {
+      allow read, delete: if request.auth.uid == resource.data.userId;
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow update: if request.auth.uid == resource.data.userId;
+    }
+
+    // Users can only read/write/delete their own entries
+    match /entries/{entryId} {
       allow read, delete: if request.auth.uid == resource.data.userId;
       allow create: if request.auth.uid == request.resource.data.userId;
       allow update: if request.auth.uid == resource.data.userId;
@@ -182,13 +205,14 @@ The app runs at http://localhost:5173 (or 5174, 5175 if ports are in use)
 1. **Login:** User logs in with email/password
 2. **View Dashboard:** See today's calorie summary (consumed, goal, remaining)
 3. **Set Goal:** Edit daily calorie goal (default: 2000 calories)
-4. **Log Meal:** Enter food name and calories, submit
-5. **Track Progress:**
+4. **Manage Foods:** Add foods to personal library with name and calories per 100g
+5. **Log Entry:** Select food from library, enter grams, calories auto-calculated
+6. **Track Progress:**
    - Progress bar shows percentage of goal consumed
    - Color indicators: green (under goal), yellow (near goal), red (over goal)
    - Real-time total calculation
-6. **Manage Meals:** View today's meals list, delete meals if needed
-7. **Persistence:** All data saved to Firestore, loads on page refresh
+7. **Manage Entries:** View today's entries, edit or delete as needed
+8. **Persistence:** All data saved to Firestore, loads on page refresh
 
 ## API / Service Functions
 
@@ -208,9 +232,9 @@ subscribeToAuthChanges((user) => {
 });
 ```
 
-### Calorie Tracking (`services/calories.js`)
+### Entry Tracking (`services/calories.js`)
 ```javascript
-import { getUserGoal, setUserGoal, addMeal, getTodaysMeals, deleteMeal } from './services/calories';
+import { getUserGoal, setUserGoal, addEntry, getTodaysEntries, updateEntry, deleteEntry } from './services/calories';
 
 // Get user's daily goal
 const goal = await getUserGoal(userId);
@@ -218,14 +242,37 @@ const goal = await getUserGoal(userId);
 // Update goal
 await setUserGoal(userId, 2500);
 
-// Log a meal
-const meal = await addMeal(userId, 'Grilled Chicken', 350);
+// Log an entry
+const entry = await addEntry(userId, foodId, 'Grilled Chicken', 150, 248);
 
-// Get today's meals
-const meals = await getTodaysMeals(userId);
+// Get today's entries
+const entries = await getTodaysEntries(userId);
 
-// Delete a meal
-await deleteMeal(mealId);
+// Update an entry
+await updateEntry(entryId, foodId, 'Grilled Chicken', 200, 330);
+
+// Delete an entry
+await deleteEntry(entryId);
+```
+
+### Food Library (`services/foods.js`)
+```javascript
+import { getUserFoods, addFood, updateFood, deleteFood, calculateCalories } from './services/foods';
+
+// Get user's food library
+const foods = await getUserFoods(userId);
+
+// Add a new food
+const food = await addFood(userId, 'Chicken Breast', 165);
+
+// Update a food
+await updateFood(foodId, 'Grilled Chicken Breast', 165);
+
+// Delete a food
+await deleteFood(foodId);
+
+// Calculate calories for a given amount
+const calories = calculateCalories(165, 150); // 248 calories for 150g
 ```
 
 ## Key Implementation Details
@@ -235,14 +282,14 @@ await deleteMeal(mealId);
 - Development mode uses `VITE_FIREBASE_DEV_*` variables
 - Production mode uses `VITE_FIREBASE_PROD_*` variables
 
-### Meal Date Handling
+### Entry Date Handling
 - Uses ISO date format (YYYY-MM-DD) for consistent querying
 - Timezone-aware date calculation
-- Meals sorted by `mealTime` in descending order (most recent first)
+- Entries sorted by `entryTime` in descending order (most recent first)
 
 ### Firestore Query Optimization
-- No composite indexes required
-- Sorting done in JavaScript instead of Firestore
+- Composite index required for foods collection (userId + name ordering)
+- Entry sorting done in JavaScript instead of Firestore
 - Efficient queries with `where` clauses on `userId` and `date`
 
 ### Security Best Practices
@@ -253,20 +300,20 @@ await deleteMeal(mealId);
 
 ## Deployment
 
-### Railway Deployment (Production)
+### Vercel Deployment (Recommended)
 
 1. **Push to GitHub:**
 ```bash
 git push origin main
 ```
 
-2. **Connect Railway:**
-- Create new project in Railway dashboard
-- Connect to GitHub repository
+2. **Connect Vercel:**
+- Go to [vercel.com/new](https://vercel.com/new)
+- Import your GitHub repository
+- Vercel auto-detects Vite configuration
 
-3. **Configure Environment Variables in Railway:**
+3. **Configure Environment Variables in Vercel Dashboard:**
 ```
-NODE_ENV=production
 VITE_FIREBASE_PROD_API_KEY=...
 VITE_FIREBASE_PROD_AUTH_DOMAIN=...
 VITE_FIREBASE_PROD_PROJECT_ID=...
@@ -275,10 +322,11 @@ VITE_FIREBASE_PROD_MESSAGING_SENDER_ID=...
 VITE_FIREBASE_PROD_APP_ID=...
 ```
 
-4. **Railway Build Process:**
+4. **Vercel Build Process:**
 - Runs `npm install` (installs client dependencies via postinstall)
 - Runs `npm run build` (builds React app with Vite)
 - Serves static files from `client/dist`
+- Automatic deployments on git push
 
 ## Development Patterns
 
@@ -359,11 +407,15 @@ npm run lint
 - Verify user is logged in
 - Ensure rules match the structure in Setup Instructions
 
-**Meals not loading after page refresh:**
+**Entries not loading after page refresh:**
 - Check browser console for errors
 - Verify Firestore has data with correct structure
 - Ensure `date` field format is YYYY-MM-DD
 - Check `userId` matches authenticated user
+
+**Foods not loading / index error:**
+- Create composite index for foods collection in Firebase Console
+- Index required: userId (Ascending), name (Ascending)
 
 **Firebase initialization errors:**
 - Verify `.env` file exists in `client/` directory
@@ -388,7 +440,6 @@ npm run lint
 
 - No sign-up UI (users created manually in Firebase Console)
 - No historical data / past days view
-- No meal editing (delete and re-add only)
 - No macros tracking (protein, carbs, fats)
 - No food database / search integration
 - Single timezone (UTC for date calculations)
@@ -399,11 +450,9 @@ Potential features to consider:
 - Sign-up form for new users
 - Historical calorie data (calendar view)
 - Weekly/monthly analytics
-- Meal templates for quick logging
 - Macros tracking (protein, carbs, fats)
-- Food database integration
+- Food database integration (USDA, etc.)
 - Photo uploads for meals
-- Social features / meal sharing
 - Export data to CSV
 - Dark/light theme toggle
 - Mobile app (React Native)
