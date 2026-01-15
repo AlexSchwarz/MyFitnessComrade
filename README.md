@@ -1,418 +1,415 @@
-# MyFitnessComrade - Project Summary (Updated)
+# MyFitnessComrade - Calorie Tracking App
 
-## Project Goal
-Building a full-stack fitness tracking application called MyFitnessComrade that allows users to log workouts, track progress, and manage their fitness journey. The application is designed to be lightweight and deployable on Railway.
+## Project Overview
+MyFitnessComrade is a modern calorie tracking application that helps users manage their daily calorie intake. Users can set daily calorie goals, log meals throughout the day, and track their progress toward their goals.
 
-## Current State - Foundation Complete with Communication Layer
+## Current Features
 
-### What We've Built So Far
+**Core Functionality:**
+- User authentication (email/password via Firebase Auth)
+- Set and edit daily calorie goals
+- Log meals with food name and calorie count
+- View today's meals with timestamps
+- Real-time calorie totals and progress tracking
+- Delete meals
+- Color-coded progress indicators (green/yellow/red)
+- Persistent data storage in Firestore
 
-**Architecture:**
-- Monorepo structure with separate client and server directories
-- Express.js backend (Node.js)
-- React 19 + Vite frontend
-- Designed for Railway deployment (monorepo single-service approach)
-- Full client-server communication layer with API service abstraction
+## Tech Stack
 
-**Backend (Express Server):**
-- Location: `/server`
-- Main entry: `server/index.js`
-- Port: 3001 (configurable via environment variable)
-- Dependencies: express, cors, dotenv
-- Structure:
-  - `/routes` - Route definitions
-    - `health.js` - Health check (GET) and logging (POST) routes
-  - `/controllers` - Business logic
-    - `healthController.js` - Health check and log value handlers
-  - Environment-based configuration via `.env`
-  - CORS configured for both development and production
-  - Static file serving in production mode (serves built React app)
+**Frontend:**
+- React 19 with Vite
+- Firebase SDK 12.7.0 (client-side integration)
+- Modern CSS with dark theme
+- Responsive design
 
-**Current API Endpoints:**
-1. `GET /api/health` - Returns server status (health check)
-2. `POST /api/health/log` - Accepts a value, logs it to server console, returns success
+**Backend/Database:**
+- Firebase Authentication (email/password)
+- Cloud Firestore (NoSQL database)
+- Client-side Firebase integration (no Express server)
 
-**Frontend (React + Vite):**
-- Location: `/client`
-- React 19 with Vite dev server
-- Dev server runs on port 5173
-- API service layer for backend communication
-- Structure:
-  - `/src/services/` - API communication layer
-    - `api.js` - Centralized API service with base `apiFetch()` wrapper
-  - `App.jsx` - Main component with two features:
-    1. Server Status Card - Displays health check results
-    2. Input Sanity Check Card - Tests POST requests with input field
-  - `App.css` - Styling with dark theme
+**Development:**
+- Node.js >= 18.0.0
+- Vite dev server with HMR
+- Separate dev and prod Firebase projects
 
-**API Service Pattern (`client/src/services/api.js`):**
-- Base `apiFetch()` function handles all HTTP requests
-- Automatic JSON parsing and error handling
-- Environment-based API URL configuration (VITE_API_URL)
-- Exported functions:
-  - `getHealth()` - Fetches server health status
-  - `logValue(value)` - Sends POST request to log a value
+## Architecture
 
-**Configuration Files:**
-
-1. **Root `package.json`:**
-   - `postinstall`: Installs dependencies for both client and server (Railway uses this)
-   - `build`: Builds the React client
-   - `start`: Starts the Express server (used by Railway)
-   - `dev:server` and `dev:client`: For local development
-
-2. **Environment Variables:**
-   - `server/.env`: PORT, NODE_ENV, CORS_ORIGIN (local dev only, not in git)
-   - `client/.env`: VITE_API_URL=http://localhost:3001 (local dev only, not in git)
-   - For Railway: Set NODE_ENV=production, CORS_ORIGIN in dashboard
-
-3. **Git Configuration:**
-   - Repository: https://github.com/AlexSchwarz/MyFitnessComrade.git
-   - Branch: main
-   - `.gitignore` properly excludes: node_modules, .env files, build outputs, IDE files, .claude/
-
-**Deployment Setup:**
-- Railway-ready monorepo configuration
-- Production mode serves React app from Express server on same port
-- Build process: Install deps → Build React → Start server → Server serves both API and static files
-- Node version: >=18.0.0
-
-### Data Flow Pattern (Established)
-
-**Example: Logging a value from client to server**
+This is a **client-only application** that communicates directly with Firebase services. No backend server required.
 
 ```
-1. User types "Hello World" in input field and clicks Submit
-   ↓
-2. App.jsx calls logValue("Hello World") from api.js
-   ↓
-3. api.js -> apiFetch('/api/health/log', { method: 'POST', body: '{"value":"Hello World"}' })
-   ↓
-4. HTTP POST to http://localhost:3001/api/health/log
-   ↓
-5. server/routes/health.js routes to healthController.logValue
-   ↓
-6. server/controllers/healthController.js:
-   - Extracts value from req.body
-   - Logs: "Received value from client: Hello World"
-   - Returns: { ok: true, message: 'Value logged successfully', received: 'Hello World' }
-   ↓
-7. Response flows back through api.js to App.jsx
-   ↓
-8. App.jsx displays success message and clears input field
+Client (React + Vite)
+    ↓
+Firebase SDK
+    ↓
+Firebase Auth + Firestore
 ```
 
-### How to Run Locally
+## Project Structure
 
-**Development mode (two terminals):**
+```
+MyFitnessComrade/
+├── .gitignore
+├── package.json                    # Root scripts (primarily for Railway)
+├── README.md
+│
+└── client/                         # React application
+    ├── .env                        # Firebase credentials (not in git)
+    ├── .env.example                # Template for environment variables
+    ├── .gitignore
+    ├── package.json                # Client dependencies
+    ├── vite.config.js              # Vite configuration
+    ├── index.html                  # HTML entry point
+    └── src/
+        ├── main.jsx                # React entry point
+        ├── App.jsx                 # Main app component
+        ├── App.css                 # App styling
+        ├── index.css               # Global styles
+        ├── config/
+        │   └── firebase.js         # Firebase initialization (dev/prod switching)
+        └── services/
+            ├── firebase.js         # Auth helper functions
+            └── calories.js         # Calorie tracking functions
+```
 
-Terminal 1 - Start backend:
+## Data Model
+
+### Firestore Collections
+
+**users/{userId}**
+```javascript
+{
+  email: string,
+  displayName: string,
+  dailyCalorieGoal: number,      // Default: 2000
+  createdAt: timestamp,
+  updatedAt: timestamp
+}
+```
+
+**meals/{mealId}**
+```javascript
+{
+  userId: string,                 // Reference to user
+  date: string,                   // YYYY-MM-DD format
+  foodName: string,               // e.g., "Chicken Breast"
+  calories: number,               // e.g., 350
+  mealTime: timestamp,            // When meal was logged
+  createdAt: timestamp
+}
+```
+
+## Setup Instructions
+
+### 1. Clone Repository
 ```bash
-cd server
-npm start
+git clone https://github.com/AlexSchwarz/MyFitnessComrade.git
+cd MyFitnessComrade
 ```
-Server runs at http://localhost:3001
-Watch this terminal for server logs (e.g., logged values from client)
 
-Terminal 2 - Start frontend:
+### 2. Install Dependencies
+```bash
+cd client
+npm install
+```
+
+### 3. Firebase Setup
+
+**Create Firebase Projects:**
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create two projects: one for development, one for production
+3. Enable **Authentication** → Email/Password provider
+4. Create **Firestore Database** in each project
+
+**Get Firebase Credentials:**
+1. In each Firebase project: Project Settings > General
+2. Under "Your apps", click the web icon (</>)
+3. Copy the config values
+
+**Configure Environment Variables:**
+1. Copy `client/.env.example` to `client/.env`
+2. Fill in your Firebase credentials:
+   - `VITE_FIREBASE_DEV_*` - Development project credentials
+   - `VITE_FIREBASE_PROD_*` - Production project credentials
+
+### 4. Firestore Security Rules
+
+**Important:** Configure these rules in Firebase Console for both dev and prod:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can only read/write their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+
+    // Users can only read/write/delete their own meals
+    match /meals/{mealId} {
+      allow read, delete: if request.auth.uid == resource.data.userId;
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow update: if request.auth.uid == resource.data.userId;
+    }
+  }
+}
+```
+
+### 5. Create Test User
+
+In Firebase Console:
+1. Go to Authentication > Users
+2. Add user manually with email and password
+3. Use these credentials to log in to the app
+
+## Running Locally
+
+**Start development server:**
 ```bash
 cd client
 npm run dev
 ```
-Client runs at http://localhost:5173
 
-**What you'll see at http://localhost:5173:**
-- "MyFitnessComrade" heading
-- **Server Status Card:**
-  - Shows connection status to backend
-  - Green success message when connected
-  - "Refresh Status" button
-- **Input Sanity Check Card:**
-  - Text input field
-  - "Submit Value" button
-  - Sends value to server and displays success/error
+The app runs at http://localhost:5173 (or 5174, 5175 if ports are in use)
 
-### What's NOT Built Yet
+**Development Features:**
+- Hot Module Replacement (HMR)
+- Automatic browser refresh on file changes
+- Connects to dev Firebase project automatically
 
-**No fitness features implemented yet:**
-- No user authentication or authorization
-- No database connection or models
-- No workout tracking functionality
-- No user profiles
-- No exercise library
-- No progress tracking or analytics
-- No data persistence beyond console logs
-- No actual fitness-related features
+## User Flow
 
-**The application currently:**
-- Only has diagnostic/testing endpoints (health check, logging)
-- Shows basic UI for testing client-server communication
-- Has no routing beyond the two test endpoints
-- Has minimal styling (dark theme, card layout)
-- Does not store any data
+1. **Login:** User logs in with email/password
+2. **View Dashboard:** See today's calorie summary (consumed, goal, remaining)
+3. **Set Goal:** Edit daily calorie goal (default: 2000 calories)
+4. **Log Meal:** Enter food name and calories, submit
+5. **Track Progress:**
+   - Progress bar shows percentage of goal consumed
+   - Color indicators: green (under goal), yellow (near goal), red (over goal)
+   - Real-time total calculation
+6. **Manage Meals:** View today's meals list, delete meals if needed
+7. **Persistence:** All data saved to Firestore, loads on page refresh
 
-## Technical Implementation Details
+## API / Service Functions
 
-### Best Practices Established
+### Authentication (`services/firebase.js`)
+```javascript
+import { signIn, logout, subscribeToAuthChanges } from './services/firebase';
 
-**1. API Service Layer Pattern:**
-- Single source of truth for API URL
-- Centralized error handling
-- Consistent request/response format
-- Easy to extend with new endpoints
+// Sign in
+await signIn(email, password);
 
-**2. Controller-Route Separation:**
-- Routes define HTTP methods and paths
-- Controllers contain business logic
-- Clear separation of concerns
-- Easy to test and maintain
+// Sign out
+await logout();
 
-**3. State Management Pattern:**
-- Separate state for loading, error, and data
-- Try/catch/finally for async operations
-- Clear error messages to users
-- Loading states prevent double submissions
-
-**4. Environment Configuration:**
-- Sensitive values in .env files (not committed)
-- Defaults for missing environment variables
-- Different configs for dev/production
-- Railway can inject environment variables
-
-**5. CORS Configuration:**
-- Environment-based origins
-- Credentials support enabled
-- Configurable for different deployment environments
-
-### Code Quality Standards
-
-**Backend:**
-- Express middleware properly ordered
-- JSON body parsing enabled
-- Async error handling via try/catch
-- Consistent response format: `{ ok: boolean, message: string, ...data }`
-
-**Frontend:**
-- React Hooks for state management (useState, useEffect)
-- Controlled form components
-- Proper form submission with preventDefault()
-- Input validation before API calls
-- Disabled states during loading
-
-## Next Steps for Future Development
-
-The foundation and communication layer are complete. Next steps would typically include:
-
-1. **Database Integration:**
-   - Choose database (PostgreSQL, MongoDB, or SQLite)
-   - Set up connection and configuration
-   - Create database schema/models
-
-2. **Authentication System:**
-   - User registration and login
-   - JWT or session-based auth
-   - Protected routes and middleware
-   - User profile management
-
-3. **Workout Tracking Features:**
-   - Create workout models (exercises, sets, reps, weight)
-   - API endpoints for CRUD operations
-   - Frontend forms for logging workouts
-   - Workout history display
-
-4. **Data Visualization:**
-   - Progress charts and graphs
-   - Exercise statistics
-   - Personal records tracking
-   - Goal setting and tracking
-
-5. **Frontend Routing:**
-   - Install React Router
-   - Create pages (Home, Workouts, Profile, etc.)
-   - Navigation components
-
-6. **Enhanced UI/UX:**
-   - Design system/component library
-   - Responsive design for mobile
-   - Loading skeletons
-   - Toast notifications
-
-## Technical Decisions Made
-
-- **Deployment strategy**: Monorepo on Railway (single service, not microservices)
-- **Frontend**: React 19 with Vite (not Create React App)
-- **Backend framework**: Express.js with organized routes/controllers
-- **API pattern**: RESTful with centralized API service layer
-- **State management**: React Hooks (no Redux/MobX needed yet)
-- **Styling**: Plain CSS with dark theme (no Tailwind/styled-components yet)
-- **CORS handling**: Environment-based configuration with credentials support
-- **Static serving**: Express serves production React build
-- **Error handling**: Consistent try/catch patterns with user-friendly messages
-
-## File Structure
-
-```
-MyFitnessComrade/
-├── .gitignore                      # Excludes env files, node_modules, build outputs
-├── package.json                    # Root monorepo scripts for Railway
-├── README.md                       # Repository README
-│
-├── client/                         # React frontend
-│   ├── .env                        # Client env vars (not in git)
-│   ├── .gitignore                  # Client-specific ignores
-│   ├── package.json                # Client dependencies
-│   ├── vite.config.js              # Vite configuration
-│   ├── index.html                  # HTML entry point
-│   └── src/
-│       ├── main.jsx                # React entry point
-│       ├── App.jsx                 # Main app component with UI
-│       ├── App.css                 # App styling
-│       ├── index.css               # Global styles
-│       └── services/
-│           └── api.js              # API service layer ⭐
-│
-└── server/                         # Express backend
-    ├── .env                        # Server env vars (not in git)
-    ├── .gitignore                  # Server-specific ignores
-    ├── package.json                # Server dependencies
-    ├── index.js                    # Express app entry point
-    ├── controllers/
-    │   └── healthController.js     # Health & log endpoints ⭐
-    └── routes/
-        └── health.js               # Health routes ⭐
+// Listen to auth changes
+subscribeToAuthChanges((user) => {
+  console.log('User:', user);
+});
 ```
 
-⭐ = Key files for understanding the API pattern
+### Calorie Tracking (`services/calories.js`)
+```javascript
+import { getUserGoal, setUserGoal, addMeal, getTodaysMeals, deleteMeal } from './services/calories';
 
-## How to Add New API Endpoints
+// Get user's daily goal
+const goal = await getUserGoal(userId);
 
-Follow this established pattern:
+// Update goal
+await setUserGoal(userId, 2500);
 
-1. **Create Controller Function** in `/server/controllers/`:
-   ```javascript
-   const myFunction = (req, res) => {
-     // Extract data from req.body or req.params
-     // Perform business logic
-     // Return response: res.json({ ok: true, ...data })
-   };
-   module.exports = { myFunction };
-   ```
+// Log a meal
+const meal = await addMeal(userId, 'Grilled Chicken', 350);
 
-2. **Create/Update Route** in `/server/routes/`:
-   ```javascript
-   const controller = require("../controllers/myController");
-   router.post("/path", controller.myFunction);
-   ```
+// Get today's meals
+const meals = await getTodaysMeals(userId);
 
-3. **Register Route** in `/server/index.js`:
-   ```javascript
-   const myRoutes = require("./routes/myRoute");
-   app.use("/api/myresource", myRoutes);
-   ```
+// Delete a meal
+await deleteMeal(mealId);
+```
 
-4. **Add API Function** in `/client/src/services/api.js`:
-   ```javascript
-   export async function myApiCall(data) {
-     return apiFetch('/api/myresource/path', {
-       method: 'POST',
-       body: JSON.stringify(data),
-     });
-   }
-   ```
+## Key Implementation Details
 
-5. **Use in React Component**:
-   ```javascript
-   import { myApiCall } from './services/api';
+### Firebase Configuration (`client/src/config/firebase.js`)
+- Automatically switches between dev and prod Firebase projects based on `import.meta.env.MODE`
+- Development mode uses `VITE_FIREBASE_DEV_*` variables
+- Production mode uses `VITE_FIREBASE_PROD_*` variables
 
-   const handleSubmit = async () => {
-     try {
-       setLoading(true);
-       const result = await myApiCall(data);
-       // Handle success
-     } catch (err) {
-       // Handle error
-     } finally {
-       setLoading(false);
-     }
-   };
-   ```
+### Meal Date Handling
+- Uses ISO date format (YYYY-MM-DD) for consistent querying
+- Timezone-aware date calculation
+- Meals sorted by `mealTime` in descending order (most recent first)
 
-## Common Development Tasks
+### Firestore Query Optimization
+- No composite indexes required
+- Sorting done in JavaScript instead of Firestore
+- Efficient queries with `where` clauses on `userId` and `date`
 
-**Start development servers:**
+### Security Best Practices
+- All `.env` files excluded from git
+- Client-side security rules enforce user-specific access
+- Authentication required for all Firestore operations
+- No API keys or credentials in source code
+
+## Deployment
+
+### Railway Deployment (Production)
+
+1. **Push to GitHub:**
 ```bash
-# Terminal 1
-cd server && npm start
-
-# Terminal 2
-cd client && npm run dev
+git push origin main
 ```
 
-**Stop all node processes (Windows):**
+2. **Connect Railway:**
+- Create new project in Railway dashboard
+- Connect to GitHub repository
+
+3. **Configure Environment Variables in Railway:**
+```
+NODE_ENV=production
+VITE_FIREBASE_PROD_API_KEY=...
+VITE_FIREBASE_PROD_AUTH_DOMAIN=...
+VITE_FIREBASE_PROD_PROJECT_ID=...
+VITE_FIREBASE_PROD_STORAGE_BUCKET=...
+VITE_FIREBASE_PROD_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_PROD_APP_ID=...
+```
+
+4. **Railway Build Process:**
+- Runs `npm install` (installs client dependencies via postinstall)
+- Runs `npm run build` (builds React app with Vite)
+- Serves static files from `client/dist`
+
+## Development Patterns
+
+### State Management
+```javascript
+const [user, setUser] = useState(null);
+const [meals, setMeals] = useState([]);
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState(null);
+
+// Loading pattern
+try {
+  setLoading(true);
+  setError(null);
+  const result = await someAsyncOperation();
+  // Handle success
+} catch (err) {
+  setError(err.message);
+} finally {
+  setLoading(false);
+}
+```
+
+### Form Handling
+```javascript
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // Validate input
+  if (!value.trim()) {
+    setError('Value required');
+    return;
+  }
+
+  // Submit
+  await submitData(value);
+};
+```
+
+### Real-time Calculations
+```javascript
+// Recalculate total whenever meals change
+useEffect(() => {
+  const total = meals.reduce((sum, meal) => sum + meal.calories, 0);
+  setTotalCalories(total);
+}, [meals]);
+```
+
+## Common Tasks
+
+**View browser console:**
+- Open DevTools (F12)
+- Check Console tab for errors or logs
+
+**Clear local data:**
+- Meals are stored per day, automatically reset at midnight (UTC)
+- Or delete meals manually in the app
+
+**Stop dev server:**
+- Press `Ctrl+C` in terminal
+
+**Rebuild production:**
 ```bash
-taskkill //F //IM node.exe
+cd client
+npm run build
 ```
 
-**View server logs:**
-Watch Terminal 1 (where server is running) for console.log output
-
-**Test API with curl:**
+**Lint code:**
 ```bash
-# GET request
-curl http://localhost:3001/api/health
-
-# POST request
-curl -X POST http://localhost:3001/api/health/log \
-  -H "Content-Type: application/json" \
-  -d '{"value":"test"}'
+cd client
+npm run lint
 ```
-
-**Deploy to Railway:**
-1. Push code to GitHub
-2. Connect Railway to GitHub repo
-3. Set environment variables in Railway dashboard:
-   - NODE_ENV=production
-   - CORS_ORIGIN=* (or specific domain)
-4. Railway automatically runs:
-   - `npm install` (triggers postinstall)
-   - `npm run build` (builds client)
-   - `npm start` (starts server)
-
-## Known Working Features
-
-✅ Server starts and listens on port 3001
-✅ Client dev server runs on port 5173
-✅ CORS properly configured for cross-origin requests
-✅ Health check endpoint returns server status
-✅ Client can fetch and display server health
-✅ POST endpoint receives and logs client data
-✅ Input form validates and submits data to server
-✅ Error handling works (empty input, server down)
-✅ Loading states prevent double submissions
-✅ Success/error messages display to user
-✅ Railway deployment configuration ready
-✅ Git repository properly configured with .gitignore
-✅ Environment variables properly excluded from version control
 
 ## Troubleshooting
 
-**Server won't start:**
-- Check port 3001 is not already in use
-- Verify .env file exists in server directory
-- Check dependencies installed: `cd server && npm install`
+**"Missing or insufficient permissions" error:**
+- Check Firestore security rules are configured
+- Verify user is logged in
+- Ensure rules match the structure in Setup Instructions
 
-**Client can't connect to server:**
-- Verify server is running (check Terminal 1)
-- Check CORS_ORIGIN in server/.env includes client URL
-- Restart server if .env was modified
+**Meals not loading after page refresh:**
+- Check browser console for errors
+- Verify Firestore has data with correct structure
+- Ensure `date` field format is YYYY-MM-DD
+- Check `userId` matches authenticated user
 
-**CORS errors in browser:**
-- Verify server has CORS middleware enabled
-- Check server/.env has CORS_ORIGIN=http://localhost:5173
-- Restart server after environment changes
+**Firebase initialization errors:**
+- Verify `.env` file exists in `client/` directory
+- Check all Firebase credentials are filled in
+- Restart dev server after changing `.env`
 
-**Background node processes won't stop:**
-- Use: `taskkill //F //IM node.exe` (Windows)
-- Don't run server with `&` operator in production
+**Authentication errors:**
+- Verify Email/Password provider is enabled in Firebase Console
+- Check user exists in Firebase Authentication
+- Ensure correct credentials
 
-The codebase is clean, well-organized, and ready for feature development with established patterns for API communication, error handling, and state management.
+## Security Checklist
+
+✅ No `.env` files committed to git
+✅ Firebase credentials in environment variables only
+✅ Firestore security rules require authentication
+✅ User-specific data access enforced by rules
+✅ No hardcoded API keys in source code
+✅ `.env.example` has placeholder values only
+
+## Known Limitations
+
+- No sign-up UI (users created manually in Firebase Console)
+- No historical data / past days view
+- No meal editing (delete and re-add only)
+- No macros tracking (protein, carbs, fats)
+- No food database / search integration
+- Single timezone (UTC for date calculations)
+
+## Future Enhancements
+
+Potential features to consider:
+- Sign-up form for new users
+- Historical calorie data (calendar view)
+- Weekly/monthly analytics
+- Meal templates for quick logging
+- Macros tracking (protein, carbs, fats)
+- Food database integration
+- Photo uploads for meals
+- Social features / meal sharing
+- Export data to CSV
+- Dark/light theme toggle
+- Mobile app (React Native)
+
+## License
+ISC
+
+## Repository
+https://github.com/AlexSchwarz/MyFitnessComrade
