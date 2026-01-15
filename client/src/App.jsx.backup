@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import { signIn, logout, subscribeToAuthChanges } from './services/firebase'
-import { getUserGoal, setUserGoal, addEntry, getTodaysEntries, updateEntry, deleteEntry } from './services/calories'
-import { getUserFoods, addFood, updateFood, deleteFood, calculateCalories } from './services/foods'
+import { getUserGoal, setUserGoal, addMeal, getTodaysMeals, deleteMeal } from './services/calories'
+import { getUserProducts, addProduct, updateProduct, deleteProduct, calculateCalories } from './services/products'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -16,27 +16,26 @@ function App() {
 
   // Calorie tracking state
   const [dailyGoal, setDailyGoal] = useState(2000)
-  const [entries, setEntries] = useState([])
+  const [meals, setMeals] = useState([])
   const [totalCalories, setTotalCalories] = useState(0)
   const [isEditingGoal, setIsEditingGoal] = useState(false)
   const [goalInput, setGoalInput] = useState('')
 
-  // Foods state
-  const [foods, setFoods] = useState([])
-  const [showFoodForm, setShowFoodForm] = useState(false)
-  const [foodFormName, setFoodFormName] = useState('')
-  const [foodFormCalories, setFoodFormCalories] = useState('')
-  const [foodError, setFoodError] = useState(null)
-  const [foodLoading, setFoodLoading] = useState(false)
-  const [editingFoodId, setEditingFoodId] = useState(null)
+  // Products state
+  const [products, setProducts] = useState([])
+  const [showProductForm, setShowProductForm] = useState(false)
+  const [productFormName, setProductFormName] = useState('')
+  const [productFormCalories, setProductFormCalories] = useState('')
+  const [productError, setProductError] = useState(null)
+  const [productLoading, setProductLoading] = useState(false)
+  const [editingProductId, setEditingProductId] = useState(null)
 
-  // Entry form state
-  const [selectedFoodId, setSelectedFoodId] = useState('')
+  // Meal form state
+  const [selectedProductId, setSelectedProductId] = useState('')
   const [grams, setGrams] = useState('')
   const [calculatedCalories, setCalculatedCalories] = useState(0)
-  const [entryError, setEntryError] = useState(null)
-  const [entryLoading, setEntryLoading] = useState(false)
-  const [editingEntryId, setEditingEntryId] = useState(null)
+  const [mealError, setMealError] = useState(null)
+  const [mealLoading, setMealLoading] = useState(false)
 
   // Subscribe to auth state changes
   useEffect(() => {
@@ -54,36 +53,36 @@ function App() {
     }
   }, [user])
 
-  // Calculate total calories whenever entries change
+  // Calculate total calories whenever meals change
   useEffect(() => {
-    const total = entries.reduce((sum, entry) => sum + entry.calories, 0)
+    const total = meals.reduce((sum, meal) => sum + meal.calories, 0)
     setTotalCalories(total)
-  }, [entries])
+  }, [meals])
 
-  // Calculate calories when food or grams change
+  // Calculate calories when product or grams change
   useEffect(() => {
-    if (selectedFoodId && grams) {
-      const food = foods.find(f => f.id === selectedFoodId)
-      if (food) {
-        const calories = calculateCalories(food.caloriesPer100g, parseFloat(grams))
+    if (selectedProductId && grams) {
+      const product = products.find(p => p.id === selectedProductId)
+      if (product) {
+        const calories = calculateCalories(product.caloriesPer100g, parseFloat(grams))
         setCalculatedCalories(calories)
       }
     } else {
       setCalculatedCalories(0)
     }
-  }, [selectedFoodId, grams, foods])
+  }, [selectedProductId, grams, products])
 
   const loadUserData = async () => {
     try {
-      const [goal, todaysEntries, userFoods] = await Promise.all([
+      const [goal, todaysMeals, userProducts] = await Promise.all([
         getUserGoal(user.uid),
-        getTodaysEntries(user.uid),
-        getUserFoods(user.uid)
+        getTodaysMeals(user.uid),
+        getUserProducts(user.uid)
       ])
 
       setDailyGoal(goal)
-      setEntries(todaysEntries)
-      setFoods(userFoods)
+      setMeals(todaysMeals)
+      setProducts(userProducts)
     } catch (err) {
       console.error('Error loading user data:', err)
     }
@@ -113,8 +112,8 @@ function App() {
   const handleLogout = async () => {
     try {
       await logout()
-      setEntries([])
-      setFoods([])
+      setMeals([])
+      setProducts([])
       setDailyGoal(2000)
     } catch (err) {
       console.error('Logout error:', err)
@@ -141,158 +140,131 @@ function App() {
     }
   }
 
-  // Food management functions
-  const handleShowFoodForm = () => {
-    setShowFoodForm(true)
-    setEditingFoodId(null)
-    setFoodFormName('')
-    setFoodFormCalories('')
-    setFoodError(null)
+  // Product management functions
+  const handleShowProductForm = () => {
+    setShowProductForm(true)
+    setEditingProductId(null)
+    setProductFormName('')
+    setProductFormCalories('')
+    setProductError(null)
   }
 
-  const handleEditFood = (food) => {
-    setShowFoodForm(true)
-    setEditingFoodId(food.id)
-    setFoodFormName(food.name)
-    setFoodFormCalories(food.caloriesPer100g.toString())
-    setFoodError(null)
+  const handleEditProduct = (product) => {
+    setShowProductForm(true)
+    setEditingProductId(product.id)
+    setProductFormName(product.name)
+    setProductFormCalories(product.caloriesPer100g.toString())
+    setProductError(null)
   }
 
-  const handleCancelFoodForm = () => {
-    setShowFoodForm(false)
-    setEditingFoodId(null)
-    setFoodFormName('')
-    setFoodFormCalories('')
-    setFoodError(null)
+  const handleCancelProductForm = () => {
+    setShowProductForm(false)
+    setEditingProductId(null)
+    setProductFormName('')
+    setProductFormCalories('')
+    setProductError(null)
   }
 
-  const handleSaveFood = async (e) => {
+  const handleSaveProduct = async (e) => {
     e.preventDefault()
 
-    if (!foodFormName.trim()) {
-      setFoodError('Please enter a food name')
+    if (!productFormName.trim()) {
+      setProductError('Please enter a product name')
       return
     }
 
-    const caloriesNum = parseFloat(foodFormCalories)
+    const caloriesNum = parseFloat(productFormCalories)
     if (isNaN(caloriesNum) || caloriesNum <= 0) {
-      setFoodError('Please enter valid calories per 100g')
+      setProductError('Please enter valid calories per 100g')
       return
     }
 
     try {
-      setFoodLoading(true)
-      setFoodError(null)
+      setProductLoading(true)
+      setProductError(null)
 
-      if (editingFoodId) {
-        // Update existing food
-        await updateFood(editingFoodId, foodFormName, caloriesNum)
-        setFoods(foods.map(f =>
-          f.id === editingFoodId
-            ? { ...f, name: foodFormName, caloriesPer100g: caloriesNum }
-            : f
+      if (editingProductId) {
+        // Update existing product
+        await updateProduct(editingProductId, productFormName, caloriesNum)
+        setProducts(products.map(p =>
+          p.id === editingProductId
+            ? { ...p, name: productFormName, caloriesPer100g: caloriesNum }
+            : p
         ))
       } else {
-        // Add new food
-        const newFood = await addFood(user.uid, foodFormName, caloriesNum)
-        setFoods([...foods, newFood].sort((a, b) => a.name.localeCompare(b.name)))
+        // Add new product
+        const newProduct = await addProduct(user.uid, productFormName, caloriesNum)
+        setProducts([...products, newProduct].sort((a, b) => a.name.localeCompare(b.name)))
       }
 
-      handleCancelFoodForm()
+      handleCancelProductForm()
     } catch (err) {
-      setFoodError(err.message)
+      setProductError(err.message)
     } finally {
-      setFoodLoading(false)
+      setProductLoading(false)
     }
   }
 
-  const handleDeleteFood = async (foodId) => {
-    if (!confirm('Are you sure you want to delete this food?')) {
+  const handleDeleteProduct = async (productId) => {
+    if (!confirm('Are you sure you want to delete this product?')) {
       return
     }
 
     try {
-      await deleteFood(foodId)
-      setFoods(foods.filter(f => f.id !== foodId))
+      await deleteProduct(productId)
+      setProducts(products.filter(p => p.id !== productId))
     } catch (err) {
-      console.error('Error deleting food:', err)
+      console.error('Error deleting product:', err)
     }
   }
 
-  // Entry logging functions
-  const handleEditEntry = (entry) => {
-    setEditingEntryId(entry.id)
-    setSelectedFoodId(entry.foodId)
-    setGrams(entry.grams.toString())
-    setEntryError(null)
-  }
-
-  const handleCancelEditEntry = () => {
-    setEditingEntryId(null)
-    setSelectedFoodId('')
-    setGrams('')
-    setCalculatedCalories(0)
-    setEntryError(null)
-  }
-
-  const handleAddEntry = async (e) => {
+  // Meal logging functions
+  const handleAddMeal = async (e) => {
     e.preventDefault()
 
-    if (!selectedFoodId) {
-      setEntryError('Please select a food')
+    if (!selectedProductId) {
+      setMealError('Please select a product')
       return
     }
 
     const gramsNum = parseFloat(grams)
     if (isNaN(gramsNum) || gramsNum <= 0) {
-      setEntryError('Please enter a valid amount in grams')
+      setMealError('Please enter a valid amount in grams')
       return
     }
 
     try {
-      setEntryLoading(true)
-      setEntryError(null)
+      setMealLoading(true)
+      setMealError(null)
 
-      const food = foods.find(f => f.id === selectedFoodId)
-      const calories = calculateCalories(food.caloriesPer100g, gramsNum)
+      const product = products.find(p => p.id === selectedProductId)
+      const calories = calculateCalories(product.caloriesPer100g, gramsNum)
 
-      if (editingEntryId) {
-        // Update existing entry
-        await updateEntry(editingEntryId, selectedFoodId, food.name, gramsNum, calories)
-        setEntries(entries.map(e =>
-          e.id === editingEntryId
-            ? { ...e, foodId: selectedFoodId, foodName: food.name, grams: gramsNum, calories }
-            : e
-        ))
-        setEditingEntryId(null)
-      } else {
-        // Add new entry
-        const newEntry = await addEntry(
-          user.uid,
-          selectedFoodId,
-          food.name,
-          gramsNum,
-          calories
-        )
-        setEntries([newEntry, ...entries])
-      }
+      const newMeal = await addMeal(
+        user.uid,
+        selectedProductId,
+        product.name,
+        gramsNum,
+        calories
+      )
 
-      setSelectedFoodId('')
+      setMeals([newMeal, ...meals])
+      setSelectedProductId('')
       setGrams('')
       setCalculatedCalories(0)
     } catch (err) {
-      setEntryError(err.message)
+      setMealError(err.message)
     } finally {
-      setEntryLoading(false)
+      setMealLoading(false)
     }
   }
 
-  const handleDeleteEntry = async (entryId) => {
+  const handleDeleteMeal = async (mealId) => {
     try {
-      await deleteEntry(entryId)
-      setEntries(entries.filter(entry => entry.id !== entryId))
+      await deleteMeal(mealId)
+      setMeals(meals.filter(meal => meal.id !== mealId))
     } catch (err) {
-      console.error('Error deleting entry:', err)
+      console.error('Error deleting meal:', err)
     }
   }
 
@@ -419,50 +391,50 @@ function App() {
         </div>
       </div>
 
-      {/* Food Management */}
+      {/* Product Management */}
       <div className="card">
         <div className="card-header">
-          <h2>My Foods</h2>
-          <button onClick={handleShowFoodForm} className="button-small">
-            Add Food
+          <h2>My Products</h2>
+          <button onClick={handleShowProductForm} className="button-small">
+            Add Product
           </button>
         </div>
 
-        {showFoodForm && (
-          <form onSubmit={handleSaveFood} className="food-form">
+        {showProductForm && (
+          <form onSubmit={handleSaveProduct} className="product-form">
             <input
               type="text"
-              value={foodFormName}
-              onChange={(e) => setFoodFormName(e.target.value)}
-              placeholder="Food name (e.g., Chicken Breast)"
-              disabled={foodLoading}
+              value={productFormName}
+              onChange={(e) => setProductFormName(e.target.value)}
+              placeholder="Product name (e.g., Chicken Breast)"
+              disabled={productLoading}
               className="input"
             />
             <input
               type="number"
               step="0.1"
-              value={foodFormCalories}
-              onChange={(e) => setFoodFormCalories(e.target.value)}
+              value={productFormCalories}
+              onChange={(e) => setProductFormCalories(e.target.value)}
               placeholder="Calories per 100g"
-              disabled={foodLoading}
+              disabled={productLoading}
               className="input"
             />
 
-            {foodError && (
+            {productError && (
               <div className="error">
-                <p>{foodError}</p>
+                <p>{productError}</p>
               </div>
             )}
 
             <div className="button-group">
-              <button type="submit" disabled={foodLoading} className="button-small">
-                {foodLoading ? 'Saving...' : editingFoodId ? 'Update' : 'Add'}
+              <button type="submit" disabled={productLoading} className="button-small">
+                {productLoading ? 'Saving...' : editingProductId ? 'Update' : 'Add'}
               </button>
               <button
                 type="button"
-                onClick={handleCancelFoodForm}
+                onClick={handleCancelProductForm}
                 className="button-small"
-                disabled={foodLoading}
+                disabled={productLoading}
               >
                 Cancel
               </button>
@@ -470,28 +442,28 @@ function App() {
           </form>
         )}
 
-        {foods.length === 0 ? (
+        {products.length === 0 ? (
           <div className="empty-state">
-            <p>No foods yet</p>
-            <p className="empty-state-hint">Add your first food to start tracking!</p>
+            <p>No products yet</p>
+            <p className="empty-state-hint">Add your first product to start tracking meals!</p>
           </div>
         ) : (
-          <div className="foods-list">
-            {foods.map(food => (
-              <div key={food.id} className="food-card">
-                <div className="food-info">
-                  <span className="food-name">{food.name}</span>
-                  <span className="food-calories">{food.caloriesPer100g} cal/100g</span>
+          <div className="products-list">
+            {products.map(product => (
+              <div key={product.id} className="product-card">
+                <div className="product-info">
+                  <span className="product-name">{product.name}</span>
+                  <span className="product-calories">{product.caloriesPer100g} cal/100g</span>
                 </div>
-                <div className="food-actions">
+                <div className="product-actions">
                   <button
-                    onClick={() => handleEditFood(food)}
+                    onClick={() => handleEditProduct(product)}
                     className="button-edit"
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDeleteFood(food.id)}
+                    onClick={() => handleDeleteProduct(product.id)}
                     className="button-delete"
                   >
                     Delete
@@ -503,20 +475,20 @@ function App() {
         )}
       </div>
 
-      {/* Add Entry Form */}
+      {/* Add Meal Form */}
       <div className="card">
-        <h2>{editingEntryId ? 'Edit Food Entry' : 'Log Food Entry'}</h2>
-        <form onSubmit={handleAddEntry}>
+        <h2>Log Meal</h2>
+        <form onSubmit={handleAddMeal}>
           <select
-            value={selectedFoodId}
-            onChange={(e) => setSelectedFoodId(e.target.value)}
-            disabled={entryLoading || foods.length === 0}
+            value={selectedProductId}
+            onChange={(e) => setSelectedProductId(e.target.value)}
+            disabled={mealLoading || products.length === 0}
             className="input select"
           >
-            <option value="">Select a food...</option>
-            {foods.map(food => (
-              <option key={food.id} value={food.id}>
-                {food.name} ({food.caloriesPer100g} cal/100g)
+            <option value="">Select a product...</option>
+            {products.map(product => (
+              <option key={product.id} value={product.id}>
+                {product.name} ({product.caloriesPer100g} cal/100g)
               </option>
             ))}
           </select>
@@ -527,7 +499,7 @@ function App() {
             value={grams}
             onChange={(e) => setGrams(e.target.value)}
             placeholder="Amount in grams"
-            disabled={entryLoading || !selectedFoodId}
+            disabled={mealLoading || !selectedProductId}
             className="input"
           />
 
@@ -538,72 +510,54 @@ function App() {
             </div>
           )}
 
-          {entryError && (
+          {mealError && (
             <div className="error">
-              <p>{entryError}</p>
+              <p>{mealError}</p>
             </div>
           )}
 
-          <div className="button-group">
-            <button
-              type="submit"
-              disabled={entryLoading || foods.length === 0}
-              className="button"
-            >
-              {entryLoading ? (editingEntryId ? 'Updating...' : 'Adding...') : (editingEntryId ? 'Update Entry' : 'Add Entry')}
-            </button>
-            {editingEntryId && (
-              <button
-                type="button"
-                onClick={handleCancelEditEntry}
-                className="button-small"
-                disabled={entryLoading}
-              >
-                Cancel
-              </button>
-            )}
-          </div>
+          <button
+            type="submit"
+            disabled={mealLoading || products.length === 0}
+            className="button"
+          >
+            {mealLoading ? 'Adding...' : 'Add Meal'}
+          </button>
 
-          {foods.length === 0 && (
-            <p className="hint">Add foods first before logging entries</p>
+          {products.length === 0 && (
+            <p className="hint">Add products first before logging meals</p>
           )}
         </form>
       </div>
 
-      {/* Entries List */}
+      {/* Meals List */}
       <div className="card">
-        <h2>Today's Food Log</h2>
-        {entries.length === 0 ? (
+        <h2>Today's Meals</h2>
+        {meals.length === 0 ? (
           <div className="empty-state">
-            <p>No entries logged today</p>
-            <p className="empty-state-hint">Start by logging your first entry above!</p>
+            <p>No meals logged today</p>
+            <p className="empty-state-hint">Start by logging your first meal above!</p>
           </div>
         ) : (
-          <div className="entries-list">
-            {entries.map(entry => (
-              <div key={entry.id} className="entry-card">
-                <div className="entry-info">
-                  <span className="entry-name">
-                    {entry.foodName}
-                    {entry.grams && <span className="entry-grams"> ({entry.grams}g)</span>}
+          <div className="meals-list">
+            {meals.map(meal => (
+              <div key={meal.id} className="meal-card">
+                <div className="meal-info">
+                  <span className="meal-name">
+                    {meal.productName || meal.foodName}
+                    {meal.grams && <span className="meal-grams"> ({meal.grams}g)</span>}
                   </span>
-                  <span className="entry-calories">{entry.calories} cal</span>
+                  <span className="meal-calories">{meal.calories} cal</span>
                 </div>
-                <div className="entry-actions">
-                  <span className="entry-time">
-                    {new Date(entry.entryTime).toLocaleTimeString('en-US', {
+                <div className="meal-actions">
+                  <span className="meal-time">
+                    {new Date(meal.mealTime).toLocaleTimeString('en-US', {
                       hour: 'numeric',
                       minute: '2-digit'
                     })}
                   </span>
                   <button
-                    onClick={() => handleEditEntry(entry)}
-                    className="button-edit"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteEntry(entry.id)}
+                    onClick={() => handleDeleteMeal(meal.id)}
                     className="button-delete"
                   >
                     Delete
