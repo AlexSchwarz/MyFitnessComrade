@@ -333,7 +333,8 @@ VITE_FIREBASE_PROD_APP_ID=...
 ### State Management
 ```javascript
 const [user, setUser] = useState(null);
-const [meals, setMeals] = useState([]);
+const [entries, setEntries] = useState([]);
+const [foods, setFoods] = useState([]);
 const [loading, setLoading] = useState(false);
 const [error, setError] = useState(null);
 
