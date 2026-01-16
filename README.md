@@ -16,6 +16,13 @@ MyFitnessComrade is a modern calorie tracking application that helps users manag
 - Color-coded progress indicators (green/yellow/red)
 - Persistent data storage in Firestore
 
+**Navigation & UI:**
+- Tabbed navigation with 4 sections: Calories, Foods, Weight, Account
+- Mobile-first responsive design
+- Bottom navigation bar on mobile devices
+- Top sticky navigation on desktop
+- Dark theme optimized for all screen sizes
+
 ## Tech Stack
 
 **Frontend:**
@@ -64,11 +71,18 @@ MyFitnessComrade/
     ├── index.html                  # HTML entry point
     └── src/
         ├── main.jsx                # React entry point
-        ├── App.jsx                 # Main app component
-        ├── App.css                 # App styling
+        ├── App.jsx                 # Main app component (state + routing)
+        ├── App.css                 # App styling (mobile-first)
         ├── index.css               # Global styles
         ├── config/
         │   └── firebase.js         # Firebase initialization (dev/prod switching)
+        ├── components/
+        │   ├── Navigation.jsx      # Tab navigation component
+        │   └── views/
+        │       ├── TodayView.jsx   # Calories tab (goal, summary, entries)
+        │       ├── FoodsView.jsx   # Foods tab (food library management)
+        │       ├── WeightView.jsx  # Weight tab (placeholder)
+        │       └── AccountView.jsx # Account tab (user info, logout)
         └── services/
             ├── firebase.js         # Auth helper functions
             ├── calories.js         # Entry tracking functions
@@ -203,16 +217,22 @@ The app runs at http://localhost:5173 (or 5174, 5175 if ports are in use)
 ## User Flow
 
 1. **Login:** User logs in with email/password
-2. **View Dashboard:** See today's calorie summary (consumed, goal, remaining)
-3. **Set Goal:** Edit daily calorie goal (default: 2000 calories)
-4. **Manage Foods:** Add foods to personal library with name and calories per 100g
-5. **Log Entry:** Select food from library, enter grams, calories auto-calculated
-6. **Track Progress:**
-   - Progress bar shows percentage of goal consumed
-   - Color indicators: green (under goal), yellow (near goal), red (over goal)
-   - Real-time total calculation
-7. **Manage Entries:** View today's entries, edit or delete as needed
-8. **Persistence:** All data saved to Firestore, loads on page refresh
+2. **Calories Tab (default):**
+   - View today's calorie summary (consumed, goal, remaining)
+   - Edit daily calorie goal (default: 2000 calories)
+   - Log food entries by selecting from personal food library
+   - Track progress with color-coded indicators (green/yellow/red)
+   - View, edit, or delete today's entries
+3. **Foods Tab:**
+   - Manage personal food library
+   - Add new foods with name and calories per 100g
+   - Edit or delete existing foods
+4. **Weight Tab:**
+   - Placeholder for future weight tracking feature
+5. **Account Tab:**
+   - View logged-in user email
+   - Logout button
+6. **Persistence:** All data saved to Firestore, loads on page refresh
 
 ## API / Service Functions
 
@@ -282,6 +302,18 @@ const calories = calculateCalories(165, 150); // 248 calories for 150g
 - Development mode uses `VITE_FIREBASE_DEV_*` variables
 - Production mode uses `VITE_FIREBASE_PROD_*` variables
 
+### Navigation Architecture
+- State-based navigation using React `useState` (no React Router)
+- `currentTab` state controls which view is rendered
+- Views are modular components in `components/views/` directory
+- All state managed in `App.jsx` and passed as props to views
+
+### Mobile-First Responsive Design
+- Base CSS targets mobile devices (< 640px)
+- Desktop overrides applied via `@media (min-width: 641px)`
+- Navigation: fixed bottom bar on mobile, sticky top bar on desktop
+- Cards and layouts adapt to screen size
+
 ### Entry Date Handling
 - Uses ISO date format (YYYY-MM-DD) for consistent querying
 - Timezone-aware date calculation
@@ -291,6 +323,11 @@ const calories = calculateCalories(165, 150); // 248 calories for 150g
 - Composite index required for foods collection (userId + name ordering)
 - Entry sorting done in JavaScript instead of Firestore
 - Efficient queries with `where` clauses on `userId` and `date`
+
+### User Goal Storage
+- Uses `setDoc` with `{ merge: true }` option to handle both new and existing users
+- Automatically creates user document if it doesn't exist
+- Prevents "No document to update" errors for new users
 
 ### Security Best Practices
 - All `.env` files excluded from git
@@ -332,6 +369,10 @@ VITE_FIREBASE_PROD_APP_ID=...
 
 ### State Management
 ```javascript
+// Navigation state
+const [currentTab, setCurrentTab] = useState('calories');
+
+// Data state
 const [user, setUser] = useState(null);
 const [entries, setEntries] = useState([]);
 const [foods, setFoods] = useState([]);
@@ -349,6 +390,24 @@ try {
 } finally {
   setLoading(false);
 }
+```
+
+### View Rendering
+```javascript
+const renderCurrentView = () => {
+  switch (currentTab) {
+    case 'calories':
+      return <TodayView {...caloriesProps} />;
+    case 'foods':
+      return <FoodsView {...foodsProps} />;
+    case 'weight':
+      return <WeightView />;
+    case 'account':
+      return <AccountView userEmail={user.email} onLogout={handleLogout} />;
+    default:
+      return <TodayView {...caloriesProps} />;
+  }
+};
 ```
 
 ### Form Handling
@@ -444,18 +503,20 @@ npm run lint
 - No macros tracking (protein, carbs, fats)
 - No food database / search integration
 - Single timezone (UTC for date calculations)
+- Weight tracking tab is a placeholder (not yet implemented)
 
 ## Future Enhancements
 
 Potential features to consider:
 - Sign-up form for new users
+- Weight tracking functionality (tab exists as placeholder)
 - Historical calorie data (calendar view)
-- Weekly/monthly analytics
+- Weekly/monthly analytics and trends
 - Macros tracking (protein, carbs, fats)
 - Food database integration (USDA, etc.)
 - Photo uploads for meals
 - Export data to CSV
-- Dark/light theme toggle
+- Light theme option
 - Mobile app (React Native)
 
 ## License

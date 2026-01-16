@@ -10,6 +10,7 @@ import {
   getDocs,
   addDoc,
   updateDoc,
+  setDoc,
   deleteDoc,
   query,
   where,
@@ -35,13 +36,14 @@ export async function getUserGoal(userId) {
 
 /**
  * Update user's daily calorie goal
+ * Uses setDoc with merge to create doc if it doesn't exist
  */
 export async function setUserGoal(userId, goal) {
   try {
-    await updateDoc(doc(db, 'users', userId), {
+    await setDoc(doc(db, 'users', userId), {
       dailyCalorieGoal: goal,
       updatedAt: new Date().toISOString(),
-    });
+    }, { merge: true });
   } catch (error) {
     console.error('Error setting user goal:', error);
     throw error;

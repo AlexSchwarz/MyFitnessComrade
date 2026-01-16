@@ -113,3 +113,27 @@ export async function deleteFood(foodId) {
 export function calculateCalories(caloriesPer100g, grams) {
   return Math.round((grams / 100) * caloriesPer100g);
 }
+
+/**
+ * Seed default foods for a user
+ */
+export async function seedDefaultFoods(userId) {
+  const defaultFoods = {
+    "Chicken": 120,
+    "Zucchini": 16,
+    "Paprika": 26,
+    "Carrots": 41,
+    "Sunflower Oil": 884,
+    "Halb Rahm": 247,
+    "Tortilla Wrap": 312,
+    "Basmati Rice": 354,
+    "Minced Meat": 215
+  };
+
+  const results = [];
+  for (const [name, calories] of Object.entries(defaultFoods)) {
+    const food = await addFood(userId, name, calories);
+    results.push(food);
+  }
+  return results;
+}

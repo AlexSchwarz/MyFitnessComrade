@@ -2,11 +2,19 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { signIn, logout, subscribeToAuthChanges } from './services/firebase'
 import { getUserGoal, setUserGoal, addEntry, getTodaysEntries, updateEntry, deleteEntry } from './services/calories'
-import { getUserFoods, addFood, updateFood, deleteFood, calculateCalories } from './services/foods'
+import { getUserFoods, addFood, updateFood, deleteFood, calculateCalories, seedDefaultFoods } from './services/foods'
+import Navigation from './components/Navigation'
+import TodayView from './components/views/TodayView'
+import FoodsView from './components/views/FoodsView'
+import WeightView from './components/views/WeightView'
+import AccountView from './components/views/AccountView'
 
 function App() {
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
+
+  // Navigation state
+  const [currentTab, setCurrentTab] = useState('calories')
 
   // Login state
   const [email, setEmail] = useState('')
@@ -18,8 +26,6 @@ function App() {
   const [dailyGoal, setDailyGoal] = useState(2000)
   const [entries, setEntries] = useState([])
   const [totalCalories, setTotalCalories] = useState(0)
-  const [isEditingGoal, setIsEditingGoal] = useState(false)
-  const [goalInput, setGoalInput] = useState('')
 
   // Foods state
   const [foods, setFoods] = useState([])
@@ -310,7 +316,7 @@ function App() {
 
   if (!user) {
     return (
-      <div className="app">
+      <div className="app login-screen">
         <h1>MyFitnessComrade</h1>
         <p className="subtitle">Your Personal Calorie Tracker</p>
 
@@ -349,271 +355,77 @@ function App() {
     )
   }
 
+  const renderCurrentView = () => {
+    switch (currentTab) {
+      case 'calories':
+        return (
+          <TodayView
+            dailyGoal={dailyGoal}
+            totalCalories={totalCalories}
+            remainingCalories={remainingCalories}
+            percentageConsumed={percentageConsumed}
+            foods={foods}
+            selectedFoodId={selectedFoodId}
+            setSelectedFoodId={setSelectedFoodId}
+            grams={grams}
+            setGrams={setGrams}
+            calculatedCalories={calculatedCalories}
+            entryError={entryError}
+            entryLoading={entryLoading}
+            editingEntryId={editingEntryId}
+            handleAddEntry={handleAddEntry}
+            handleCancelEditEntry={handleCancelEditEntry}
+            entries={entries}
+            handleEditEntry={handleEditEntry}
+            handleDeleteEntry={handleDeleteEntry}
+          />
+        )
+      case 'foods':
+        return (
+          <FoodsView
+            foods={foods}
+            showFoodForm={showFoodForm}
+            foodFormName={foodFormName}
+            setFoodFormName={setFoodFormName}
+            foodFormCalories={foodFormCalories}
+            setFoodFormCalories={setFoodFormCalories}
+            foodError={foodError}
+            foodLoading={foodLoading}
+            editingFoodId={editingFoodId}
+            handleShowFoodForm={handleShowFoodForm}
+            handleEditFood={handleEditFood}
+            handleCancelFoodForm={handleCancelFoodForm}
+            handleSaveFood={handleSaveFood}
+            handleDeleteFood={handleDeleteFood}
+          />
+        )
+      case 'weight':
+        return <WeightView />
+      case 'account':
+        return (
+          <AccountView
+            userEmail={user.email}
+            userId={user.uid}
+            onLogout={handleLogout}
+            onSeedFoods={async () => {
+              await seedDefaultFoods(user.uid)
+              const updatedFoods = await getUserFoods(user.uid)
+              setFoods(updatedFoods)
+            }}
+          />
+        )
+      default:
+        return null
+    }
+  }
+
   return (
     <div className="app">
-      <header className="header">
-        <h1>MyFitnessComrade</h1>
-        <div className="user-info">
-          <span>{user.email}</span>
-          <button onClick={handleLogout} className="button-small">
-            Logout
-          </button>
-        </div>
-      </header>
+      <Navigation currentTab={currentTab} onTabChange={setCurrentTab} />
 
-      {/* Goal Section */}
-      <div className="card">
-        <h2>Daily Goal</h2>
-        {!isEditingGoal ? (
-          <div className="goal-display">
-            <p className="goal-value">{dailyGoal} calories</p>
-            <button onClick={handleEditGoal} className="button-small">
-              Edit
-            </button>
-          </div>
-        ) : (
-          <div className="goal-edit">
-            <input
-              type="number"
-              value={goalInput}
-              onChange={(e) => setGoalInput(e.target.value)}
-              className="input"
-              placeholder="Enter goal"
-            />
-            <div className="button-group">
-              <button onClick={handleSaveGoal} className="button-small">
-                Save
-              </button>
-              <button onClick={() => setIsEditingGoal(false)} className="button-small">
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Calorie Summary */}
-      <div className="card summary-card">
-        <h2>Today's Summary</h2>
-        <div className="summary-stats">
-          <div className="stat">
-            <span className="stat-label">Consumed</span>
-            <span className="stat-value">{totalCalories}</span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">Goal</span>
-            <span className="stat-value">{dailyGoal}</span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">Remaining</span>
-            <span className={`stat-value ${remainingCalories < 0 ? 'over-goal' : remainingCalories < dailyGoal * 0.2 ? 'near-goal' : 'under-goal'}`}>
-              {remainingCalories}
-            </span>
-          </div>
-        </div>
-        <div className="progress-bar">
-          <div
-            className="progress-fill"
-            style={{ width: `${Math.min(percentageConsumed, 100)}%` }}
-          ></div>
-        </div>
-      </div>
-
-      {/* Food Management */}
-      <div className="card">
-        <div className="card-header">
-          <h2>My Foods</h2>
-          <button onClick={handleShowFoodForm} className="button-small">
-            Add Food
-          </button>
-        </div>
-
-        {showFoodForm && (
-          <form onSubmit={handleSaveFood} className="food-form">
-            <input
-              type="text"
-              value={foodFormName}
-              onChange={(e) => setFoodFormName(e.target.value)}
-              placeholder="Food name (e.g., Chicken Breast)"
-              disabled={foodLoading}
-              className="input"
-            />
-            <input
-              type="number"
-              step="0.1"
-              value={foodFormCalories}
-              onChange={(e) => setFoodFormCalories(e.target.value)}
-              placeholder="Calories per 100g"
-              disabled={foodLoading}
-              className="input"
-            />
-
-            {foodError && (
-              <div className="error">
-                <p>{foodError}</p>
-              </div>
-            )}
-
-            <div className="button-group">
-              <button type="submit" disabled={foodLoading} className="button-small">
-                {foodLoading ? 'Saving...' : editingFoodId ? 'Update' : 'Add'}
-              </button>
-              <button
-                type="button"
-                onClick={handleCancelFoodForm}
-                className="button-small"
-                disabled={foodLoading}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
-
-        {foods.length === 0 ? (
-          <div className="empty-state">
-            <p>No foods yet</p>
-            <p className="empty-state-hint">Add your first food to start tracking!</p>
-          </div>
-        ) : (
-          <div className="foods-list">
-            {foods.map(food => (
-              <div key={food.id} className="food-card">
-                <div className="food-info">
-                  <span className="food-name">{food.name}</span>
-                  <span className="food-calories">{food.caloriesPer100g} cal/100g</span>
-                </div>
-                <div className="food-actions">
-                  <button
-                    onClick={() => handleEditFood(food)}
-                    className="button-edit"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteFood(food.id)}
-                    className="button-delete"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Add Entry Form */}
-      <div className="card">
-        <h2>{editingEntryId ? 'Edit Food Entry' : 'Log Food Entry'}</h2>
-        <form onSubmit={handleAddEntry}>
-          <select
-            value={selectedFoodId}
-            onChange={(e) => setSelectedFoodId(e.target.value)}
-            disabled={entryLoading || foods.length === 0}
-            className="input select"
-          >
-            <option value="">Select a food...</option>
-            {foods.map(food => (
-              <option key={food.id} value={food.id}>
-                {food.name} ({food.caloriesPer100g} cal/100g)
-              </option>
-            ))}
-          </select>
-
-          <input
-            type="number"
-            step="0.1"
-            value={grams}
-            onChange={(e) => setGrams(e.target.value)}
-            placeholder="Amount in grams"
-            disabled={entryLoading || !selectedFoodId}
-            className="input"
-          />
-
-          {calculatedCalories > 0 && (
-            <div className="calculated-calories">
-              <span className="calories-label">Calories:</span>
-              <span className="calories-value">{calculatedCalories} cal</span>
-            </div>
-          )}
-
-          {entryError && (
-            <div className="error">
-              <p>{entryError}</p>
-            </div>
-          )}
-
-          <div className="button-group">
-            <button
-              type="submit"
-              disabled={entryLoading || foods.length === 0}
-              className="button"
-            >
-              {entryLoading ? (editingEntryId ? 'Updating...' : 'Adding...') : (editingEntryId ? 'Update Entry' : 'Add Entry')}
-            </button>
-            {editingEntryId && (
-              <button
-                type="button"
-                onClick={handleCancelEditEntry}
-                className="button-small"
-                disabled={entryLoading}
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-
-          {foods.length === 0 && (
-            <p className="hint">Add foods first before logging entries</p>
-          )}
-        </form>
-      </div>
-
-      {/* Entries List */}
-      <div className="card">
-        <h2>Today's Food Log</h2>
-        {entries.length === 0 ? (
-          <div className="empty-state">
-            <p>No entries logged today</p>
-            <p className="empty-state-hint">Start by logging your first entry above!</p>
-          </div>
-        ) : (
-          <div className="entries-list">
-            {entries.map(entry => (
-              <div key={entry.id} className="entry-card">
-                <div className="entry-info">
-                  <span className="entry-name">
-                    {entry.foodName}
-                    {entry.grams && <span className="entry-grams"> ({entry.grams}g)</span>}
-                  </span>
-                  <span className="entry-calories">{entry.calories} cal</span>
-                </div>
-                <div className="entry-actions">
-                  <span className="entry-time">
-                    {new Date(entry.entryTime).toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                  <button
-                    onClick={() => handleEditEntry(entry)}
-                    className="button-edit"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteEntry(entry.id)}
-                    className="button-delete"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <main className="main-content">
+        {renderCurrentView()}
+      </main>
     </div>
   )
 }
