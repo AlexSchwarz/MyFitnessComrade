@@ -14,7 +14,6 @@ import {
   deleteDoc,
   query,
   where,
-  orderBy,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -62,7 +61,6 @@ export async function addEntry(userId, foodId, foodName, grams, calories) {
   try {
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     const entryData = {
-      userId,
       date: today,
       foodId,
       foodName,
@@ -72,7 +70,7 @@ export async function addEntry(userId, foodId, foodName, grams, calories) {
       createdAt: new Date().toISOString(),
     };
 
-    const docRef = await addDoc(collection(db, 'entries'), entryData);
+    const docRef = await addDoc(collection(db, 'users', userId, 'entries'), entryData);
     return { id: docRef.id, ...entryData };
   } catch (error) {
     console.error('Error adding entry:', error);
@@ -87,8 +85,7 @@ export async function getTodaysEntries(userId) {
   try {
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     const entriesQuery = query(
-      collection(db, 'entries'),
-      where('userId', '==', userId),
+      collection(db, 'users', userId, 'entries'),
       where('date', '==', today)
     );
 
@@ -108,15 +105,16 @@ export async function getTodaysEntries(userId) {
 
 /**
  * Update an existing entry
+ * @param {string} userId - User ID
  * @param {string} entryId - Entry ID
  * @param {string} foodId - Food ID
  * @param {string} foodName - Food name
  * @param {number} grams - Amount in grams
  * @param {number} calories - Pre-calculated calories
  */
-export async function updateEntry(entryId, foodId, foodName, grams, calories) {
+export async function updateEntry(userId, entryId, foodId, foodName, grams, calories) {
   try {
-    await updateDoc(doc(db, 'entries', entryId), {
+    await updateDoc(doc(db, 'users', userId, 'entries', entryId), {
       foodId,
       foodName,
       grams: Number(grams),
@@ -131,10 +129,12 @@ export async function updateEntry(entryId, foodId, foodName, grams, calories) {
 
 /**
  * Delete an entry
+ * @param {string} userId - User ID
+ * @param {string} entryId - Entry ID
  */
-export async function deleteEntry(entryId) {
+export async function deleteEntry(userId, entryId) {
   try {
-    await deleteDoc(doc(db, 'entries', entryId));
+    await deleteDoc(doc(db, 'users', userId, 'entries', entryId));
   } catch (error) {
     console.error('Error deleting entry:', error);
     throw error;

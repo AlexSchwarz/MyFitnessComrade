@@ -12,7 +12,6 @@ import {
   updateDoc,
   deleteDoc,
   query,
-  where,
   orderBy,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -24,8 +23,7 @@ export async function getUserFoods(userId) {
   try {
     console.log('🔍 Fetching foods for user:', userId);
     const foodsQuery = query(
-      collection(db, 'foods'),
-      where('userId', '==', userId),
+      collection(db, 'users', userId, 'foods'),
       orderBy('name', 'asc')
     );
 
@@ -44,10 +42,12 @@ export async function getUserFoods(userId) {
 
 /**
  * Get a single food by ID
+ * @param {string} userId - User ID
+ * @param {string} foodId - Food ID
  */
-export async function getFood(foodId) {
+export async function getFood(userId, foodId) {
   try {
-    const foodDoc = await getDoc(doc(db, 'foods', foodId));
+    const foodDoc = await getDoc(doc(db, 'users', userId, 'foods', foodId));
     if (foodDoc.exists()) {
       return { id: foodDoc.id, ...foodDoc.data() };
     }
@@ -60,18 +60,20 @@ export async function getFood(foodId) {
 
 /**
  * Add a new food
+ * @param {string} userId - User ID
+ * @param {string} name - Food name
+ * @param {number} caloriesPer100g - Calories per 100g
  */
 export async function addFood(userId, name, caloriesPer100g) {
   try {
     const foodData = {
-      userId,
       name: name.trim(),
       caloriesPer100g: Number(caloriesPer100g),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    const docRef = await addDoc(collection(db, 'foods'), foodData);
+    const docRef = await addDoc(collection(db, 'users', userId, 'foods'), foodData);
     return { id: docRef.id, ...foodData };
   } catch (error) {
     console.error('Error adding food:', error);
@@ -81,10 +83,14 @@ export async function addFood(userId, name, caloriesPer100g) {
 
 /**
  * Update a food
+ * @param {string} userId - User ID
+ * @param {string} foodId - Food ID
+ * @param {string} name - Food name
+ * @param {number} caloriesPer100g - Calories per 100g
  */
-export async function updateFood(foodId, name, caloriesPer100g) {
+export async function updateFood(userId, foodId, name, caloriesPer100g) {
   try {
-    await updateDoc(doc(db, 'foods', foodId), {
+    await updateDoc(doc(db, 'users', userId, 'foods', foodId), {
       name: name.trim(),
       caloriesPer100g: Number(caloriesPer100g),
       updatedAt: new Date().toISOString(),
@@ -97,10 +103,12 @@ export async function updateFood(foodId, name, caloriesPer100g) {
 
 /**
  * Delete a food
+ * @param {string} userId - User ID
+ * @param {string} foodId - Food ID
  */
-export async function deleteFood(foodId) {
+export async function deleteFood(userId, foodId) {
   try {
-    await deleteDoc(doc(db, 'foods', foodId));
+    await deleteDoc(doc(db, 'users', userId, 'foods', foodId));
   } catch (error) {
     console.error('Error deleting food:', error);
     throw error;

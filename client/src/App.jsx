@@ -192,7 +192,7 @@ function App() {
 
       if (editingFoodId) {
         // Update existing food
-        await updateFood(editingFoodId, foodFormName, caloriesNum)
+        await updateFood(user.uid, editingFoodId, foodFormName, caloriesNum)
         setFoods(foods.map(f =>
           f.id === editingFoodId
             ? { ...f, name: foodFormName, caloriesPer100g: caloriesNum }
@@ -218,7 +218,7 @@ function App() {
     }
 
     try {
-      await deleteFood(foodId)
+      await deleteFood(user.uid, foodId)
       setFoods(foods.filter(f => f.id !== foodId))
     } catch (err) {
       console.error('Error deleting food:', err)
@@ -264,7 +264,7 @@ function App() {
 
       if (editingEntryId) {
         // Update existing entry
-        await updateEntry(editingEntryId, selectedFoodId, food.name, gramsNum, calories)
+        await updateEntry(user.uid, editingEntryId, selectedFoodId, food.name, gramsNum, calories)
         setEntries(entries.map(e =>
           e.id === editingEntryId
             ? { ...e, foodId: selectedFoodId, foodName: food.name, grams: gramsNum, calories }
@@ -295,7 +295,7 @@ function App() {
 
   const handleDeleteEntry = async (entryId) => {
     try {
-      await deleteEntry(entryId)
+      await deleteEntry(user.uid, entryId)
       setEntries(entries.filter(entry => entry.id !== entryId))
     } catch (err) {
       console.error('Error deleting entry:', err)
