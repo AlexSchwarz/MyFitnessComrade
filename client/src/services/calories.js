@@ -12,6 +12,7 @@ import {
   updateDoc,
   setDoc,
   deleteDoc,
+  deleteField,
   query,
   where,
 } from 'firebase/firestore';
@@ -50,25 +51,29 @@ export async function setUserGoal(userId, goal) {
 }
 
 /**
- * Add a food entry with food reference
+ * Add a food entry (food-based or custom)
  * @param {string} userId - User ID
- * @param {string} foodId - Food ID
- * @param {string} foodName - Food name (denormalized for display)
- * @param {number} grams - Amount in grams
- * @param {number} calories - Pre-calculated calories
+ * @param {string|null} foodId - Food ID (null for custom entries)
+ * @param {string} foodName - Food name or custom name for display
+ * @param {number|null} grams - Amount in grams (null for custom entries)
+ * @param {number} calories - Pre-calculated or direct calories
  */
 export async function addEntry(userId, foodId, foodName, grams, calories) {
   try {
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     const entryData = {
       date: today,
-      foodId,
       foodName,
-      grams: Number(grams),
       calories: Number(calories),
       entryTime: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     };
+
+    // Only include foodId and grams for food-based entries
+    if (foodId) {
+      entryData.foodId = foodId;
+      entryData.grams = Number(grams);
+    }
 
     const docRef = await addDoc(collection(db, 'users', userId, 'entries'), entryData);
     return { id: docRef.id, ...entryData };
@@ -104,23 +109,34 @@ export async function getTodaysEntries(userId) {
 }
 
 /**
- * Update an existing entry
+ * Update an existing entry (food-based or custom)
  * @param {string} userId - User ID
  * @param {string} entryId - Entry ID
- * @param {string} foodId - Food ID
- * @param {string} foodName - Food name
- * @param {number} grams - Amount in grams
- * @param {number} calories - Pre-calculated calories
+ * @param {string|null} foodId - Food ID (null for custom entries)
+ * @param {string} foodName - Food name or custom name
+ * @param {number|null} grams - Amount in grams (null for custom entries)
+ * @param {number} calories - Pre-calculated or direct calories
  */
 export async function updateEntry(userId, entryId, foodId, foodName, grams, calories) {
   try {
-    await updateDoc(doc(db, 'users', userId, 'entries', entryId), {
-      foodId,
+    const updateData = {
       foodName,
-      grams: Number(grams),
       calories: Number(calories),
       updatedAt: new Date().toISOString(),
-    });
+    };
+
+    // For food-based entries, include foodId and grams
+    // For custom entries, explicitly remove them using deleteField
+    if (foodId) {
+      updateData.foodId = foodId;
+      updateData.grams = Number(grams);
+    } else {
+      // Remove food-specific fields when converting to custom entry
+      updateData.foodId = deleteField();
+      updateData.grams = deleteField();
+    }
+
+    await updateDoc(doc(db, 'users', userId, 'entries', entryId), updateData);
   } catch (error) {
     console.error('Error updating entry:', error);
     throw error;

@@ -19,6 +19,15 @@ function TodayView({
   editingEntryId,
   handleAddEntry,
   handleCancelEditEntry,
+  // Mode props
+  isCustomMode,
+  handleSwitchToCustomMode,
+  handleSwitchToFoodMode,
+  // Custom entry props
+  customName,
+  setCustomName,
+  customCalories,
+  setCustomCalories,
   // Entries list props
   entries,
   handleEditEntry,
@@ -31,6 +40,14 @@ function TodayView({
   const handleFoodSelect = (food) => {
     setSelectedFoodId(food.id)
   }
+
+  // Determine if submit should be disabled
+  const isSubmitDisabled = entryLoading || (
+    isCustomMode
+      ? (!customName.trim() || !customCalories)
+      : (!selectedFoodId || !grams)
+  )
+
   return (
     <>
       {/* Calorie Summary */}
@@ -61,41 +78,64 @@ function TodayView({
 
       {/* Add Entry Form */}
       <div className="card">
-        {editingEntryId && <h2>Edit Entry</h2>}
+        {editingEntryId && <h2 className="form-title">Edit Entry</h2>}
         <form onSubmit={handleAddEntry}>
-          {selectedFood ? (
-            <div className="selected-food-summary">
-              <div className="selected-food-info">
-                <span className="selected-food-name">{selectedFood.name}</span>
-                <span className="selected-food-calories">{selectedFood.caloriesPer100g} cal/100g</span>
-              </div>
-              <button
-                type="button"
-                className="button-change"
-                onClick={() => setIsPickerOpen(true)}
+          {/* Mode toggle + main input row */}
+          <div className="entry-mode-row">
+            {isCustomMode ? (
+              <input
+                type="text"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                placeholder="Entry name"
                 disabled={entryLoading}
-              >
-                Change
-              </button>
-            </div>
-          ) : (
+                className="input entry-mode-input"
+              />
+            ) : (
+              selectedFood ? (
+                <div className="selected-food-summary">
+                  <div className="selected-food-info">
+                    <span className="selected-food-name">{selectedFood.name}</span>
+                    <span className="selected-food-calories">{selectedFood.caloriesPer100g} cal/100g</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="button-change"
+                    onClick={() => setIsPickerOpen(true)}
+                    disabled={entryLoading}
+                  >
+                    Change
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="food-picker-trigger"
+                  onClick={() => setIsPickerOpen(true)}
+                  disabled={entryLoading}
+                >
+                  Choose food
+                </button>
+              )
+            )}
+
             <button
               type="button"
-              className="food-picker-trigger"
-              onClick={() => setIsPickerOpen(true)}
-              disabled={entryLoading || foods.length === 0}
+              className="mode-toggle-btn"
+              onClick={isCustomMode ? handleSwitchToFoodMode : handleSwitchToCustomMode}
+              disabled={entryLoading}
             >
-              Choose food
+              {isCustomMode ? 'Food' : 'Custom'}
             </button>
-          )}
+          </div>
 
-          {selectedFoodId && (
+          {isCustomMode ? (
             <>
               <div className="grams-quick-add">
                 <button
                   type="button"
                   className="quick-add-btn"
-                  onClick={() => setGrams(String((parseFloat(grams) || 0) + 100))}
+                  onClick={() => setCustomCalories(String((parseFloat(customCalories) || 0) + 100))}
                   disabled={entryLoading}
                 >
                   +100
@@ -103,7 +143,7 @@ function TodayView({
                 <button
                   type="button"
                   className="quick-add-btn"
-                  onClick={() => setGrams(String((parseFloat(grams) || 0) + 50))}
+                  onClick={() => setCustomCalories(String((parseFloat(customCalories) || 0) + 50))}
                   disabled={entryLoading}
                 >
                   +50
@@ -111,8 +151,54 @@ function TodayView({
                 <button
                   type="button"
                   className="quick-add-btn"
-                  onClick={() => setGrams(String((parseFloat(grams) || 0) + 10))}
+                  onClick={() => setCustomCalories(String((parseFloat(customCalories) || 0) + 10))}
                   disabled={entryLoading}
+                >
+                  +10
+                </button>
+                <button
+                  type="button"
+                  className="quick-add-btn quick-add-btn-clear"
+                  onClick={() => setCustomCalories('')}
+                  disabled={entryLoading || !customCalories}
+                >
+                  Clear
+                </button>
+              </div>
+              <input
+                type="number"
+                value={customCalories}
+                onChange={(e) => setCustomCalories(e.target.value)}
+                placeholder="Calories"
+                disabled={entryLoading}
+                className="input"
+              />
+            </>
+          ) : (
+            <>
+              {/* Food-based entry: grams input */}
+              <div className="grams-quick-add">
+                <button
+                  type="button"
+                  className="quick-add-btn"
+                  onClick={() => setGrams(String((parseFloat(grams) || 0) + 100))}
+                  disabled={entryLoading || !selectedFoodId}
+                >
+                  +100
+                </button>
+                <button
+                  type="button"
+                  className="quick-add-btn"
+                  onClick={() => setGrams(String((parseFloat(grams) || 0) + 50))}
+                  disabled={entryLoading || !selectedFoodId}
+                >
+                  +50
+                </button>
+                <button
+                  type="button"
+                  className="quick-add-btn"
+                  onClick={() => setGrams(String((parseFloat(grams) || 0) + 10))}
+                  disabled={entryLoading || !selectedFoodId}
                 >
                   +10
                 </button>
@@ -132,17 +218,17 @@ function TodayView({
                 value={grams}
                 onChange={(e) => setGrams(e.target.value)}
                 placeholder="Amount in grams"
-                disabled={entryLoading}
+                disabled={entryLoading || !selectedFoodId}
                 className="input"
               />
-            </>
-          )}
 
-          {calculatedCalories > 0 && (
-            <div className="calculated-calories">
-              <span className="calories-label">Calories:</span>
-              <span className="calories-value">{calculatedCalories} cal</span>
-            </div>
+              {calculatedCalories > 0 && (
+                <div className="calculated-calories">
+                  <span className="calories-label">Calories:</span>
+                  <span className="calories-value">{calculatedCalories} cal</span>
+                </div>
+              )}
+            </>
           )}
 
           {entryError && (
@@ -154,7 +240,7 @@ function TodayView({
           <div className="button-group">
             <button
               type="submit"
-              disabled={entryLoading || foods.length === 0 || !selectedFoodId}
+              disabled={isSubmitDisabled}
               className="button"
             >
               {entryLoading ? (editingEntryId ? 'Updating...' : 'Adding...') : (editingEntryId ? 'Update Entry' : 'Add Entry')}
@@ -170,10 +256,6 @@ function TodayView({
               </button>
             )}
           </div>
-
-          {foods.length === 0 && (
-            <p className="hint">Add foods first before logging entries</p>
-          )}
         </form>
       </div>
 

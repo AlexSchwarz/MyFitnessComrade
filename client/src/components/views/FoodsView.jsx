@@ -16,15 +16,11 @@ function FoodsView({
 }) {
   return (
     <>
-      <div className="card">
-        <div className="card-header">
-          <button onClick={handleShowFoodForm} className="button-small">
-            Add Food
-          </button>
-        </div>
-
-        {showFoodForm && (
-          <form onSubmit={handleSaveFood} className="food-form">
+      {/* Add/Edit Food Form */}
+      {showFoodForm && (
+        <div className="card">
+          <h2 className="form-title">{editingFoodId ? 'Edit Food' : 'Add Food'}</h2>
+          <form onSubmit={handleSaveFood}>
             <input
               type="text"
               value={foodFormName}
@@ -50,8 +46,8 @@ function FoodsView({
             )}
 
             <div className="button-group">
-              <button type="submit" disabled={foodLoading} className="button-small">
-                {foodLoading ? 'Saving...' : editingFoodId ? 'Update' : 'Add'}
+              <button type="submit" disabled={foodLoading} className="button">
+                {foodLoading ? 'Saving...' : editingFoodId ? 'Update Food' : 'Add Food'}
               </button>
               <button
                 type="button"
@@ -63,7 +59,19 @@ function FoodsView({
               </button>
             </div>
           </form>
-        )}
+        </div>
+      )}
+
+      {/* Foods List */}
+      <div className="card">
+        <div className="card-header-row">
+          <h2>My Foods</h2>
+          {!showFoodForm && (
+            <button onClick={handleShowFoodForm} className="button-add">
+              + Add
+            </button>
+          )}
+        </div>
 
         {foods.length === 0 ? (
           <div className="empty-state">

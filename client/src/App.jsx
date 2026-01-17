@@ -44,6 +44,11 @@ function App() {
   const [entryLoading, setEntryLoading] = useState(false)
   const [editingEntryId, setEditingEntryId] = useState(null)
 
+  // Custom entry state (for entries without food reference)
+  const [customName, setCustomName] = useState('')
+  const [customCalories, setCustomCalories] = useState('')
+  const [isCustomMode, setIsCustomMode] = useState(false)
+
   // Subscribe to auth state changes
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges((user) => {
@@ -208,68 +213,147 @@ function App() {
   // Entry logging functions
   const handleEditEntry = (entry) => {
     setEditingEntryId(entry.id)
-    setSelectedFoodId(entry.foodId)
-    setGrams(entry.grams.toString())
     setEntryError(null)
+
+    // Check if this is a custom entry (no foodId)
+    if (entry.foodId) {
+      // Food-based entry - open in Food mode
+      setIsCustomMode(false)
+      setSelectedFoodId(entry.foodId)
+      setGrams(entry.grams.toString())
+      setCustomName('')
+      setCustomCalories('')
+    } else {
+      // Custom entry - open in Custom mode
+      setIsCustomMode(true)
+      setSelectedFoodId('')
+      setGrams('')
+      setCustomName(entry.foodName)
+      setCustomCalories(entry.calories.toString())
+    }
   }
 
   const handleCancelEditEntry = () => {
     setEditingEntryId(null)
+    setIsCustomMode(false)
+    setSelectedFoodId('')
+    setGrams('')
+    setCalculatedCalories(0)
+    setCustomName('')
+    setCustomCalories('')
+    setEntryError(null)
+  }
+
+  // Mode toggle handlers with input clearing
+  const handleSwitchToCustomMode = () => {
+    setIsCustomMode(true)
+    // Clear food mode inputs
     setSelectedFoodId('')
     setGrams('')
     setCalculatedCalories(0)
     setEntryError(null)
   }
 
+  const handleSwitchToFoodMode = () => {
+    setIsCustomMode(false)
+    // Clear custom mode inputs
+    setCustomName('')
+    setCustomCalories('')
+    setEntryError(null)
+  }
+
   const handleAddEntry = async (e) => {
     e.preventDefault()
 
-    if (!selectedFoodId) {
-      setEntryError('Please select a food')
-      return
-    }
-
-    const gramsNum = parseFloat(grams)
-    if (isNaN(gramsNum) || gramsNum <= 0) {
-      setEntryError('Please enter a valid amount in grams')
-      return
-    }
-
-    try {
-      setEntryLoading(true)
-      setEntryError(null)
-
-      const food = foods.find(f => f.id === selectedFoodId)
-      const calories = calculateCalories(food.caloriesPer100g, gramsNum)
-
-      if (editingEntryId) {
-        // Update existing entry
-        await updateEntry(user.uid, editingEntryId, selectedFoodId, food.name, gramsNum, calories)
-        setEntries(entries.map(e =>
-          e.id === editingEntryId
-            ? { ...e, foodId: selectedFoodId, foodName: food.name, grams: gramsNum, calories }
-            : e
-        ))
-        setEditingEntryId(null)
-      } else {
-        // Add new entry
-        const newEntry = await addEntry(
-          user.uid,
-          selectedFoodId,
-          food.name,
-          gramsNum,
-          calories
-        )
-        setEntries([newEntry, ...entries])
+    if (isCustomMode) {
+      // Custom entry validation
+      if (!customName.trim()) {
+        setEntryError('Please enter a name')
+        return
+      }
+      const caloriesNum = parseFloat(customCalories)
+      if (isNaN(caloriesNum) || caloriesNum <= 0) {
+        setEntryError('Please enter valid calories')
+        return
       }
 
-      setSelectedFoodId('')
-      setGrams('')
-      setCalculatedCalories(0)
-    } catch (err) {
-      setEntryError(err.message)
-    } finally {
-      setEntryLoading(false)
+      try {
+        setEntryLoading(true)
+        setEntryError(null)
+
+        if (editingEntryId) {
+          // Update existing entry to custom
+          await updateEntry(user.uid, editingEntryId, null, customName.trim(), null, caloriesNum)
+          setEntries(entries.map(e =>
+            e.id === editingEntryId
+              ? { ...e, foodId: undefined, foodName: customName.trim(), grams: undefined, calories: caloriesNum }
+              : e
+          ))
+          setEditingEntryId(null)
+        } else {
+          // Add new custom entry
+          const newEntry = await addEntry(user.uid, null, customName.trim(), null, caloriesNum)
+          setEntries([newEntry, ...entries])
+        }
+
+        // Reset to default state (Food mode)
+        setIsCustomMode(false)
+        setCustomName('')
+        setCustomCalories('')
+      } catch (err) {
+        setEntryError(err.message)
+      } finally {
+        setEntryLoading(false)
+      }
+    } else {
+      // Food-based entry validation
+      if (!selectedFoodId) {
+        setEntryError('Please select a food')
+        return
+      }
+      const gramsNum = parseFloat(grams)
+      if (isNaN(gramsNum) || gramsNum <= 0) {
+        setEntryError('Please enter a valid amount in grams')
+        return
+      }
+
+      try {
+        setEntryLoading(true)
+        setEntryError(null)
+
+        const food = foods.find(f => f.id === selectedFoodId)
+        const calories = calculateCalories(food.caloriesPer100g, gramsNum)
+
+        if (editingEntryId) {
+          // Update existing entry
+          await updateEntry(user.uid, editingEntryId, selectedFoodId, food.name, gramsNum, calories)
+          setEntries(entries.map(e =>
+            e.id === editingEntryId
+              ? { ...e, foodId: selectedFoodId, foodName: food.name, grams: gramsNum, calories }
+              : e
+          ))
+          setEditingEntryId(null)
+        } else {
+          // Add new entry
+          const newEntry = await addEntry(
+            user.uid,
+            selectedFoodId,
+            food.name,
+            gramsNum,
+            calories
+          )
+          setEntries([newEntry, ...entries])
+        }
+
+        // Reset to default state (Food mode, no selection)
+        setSelectedFoodId('')
+        setGrams('')
+        setCalculatedCalories(0)
+      } catch (err) {
+        setEntryError(err.message)
+      } finally {
+        setEntryLoading(false)
+      }
     }
   }
 
@@ -355,6 +439,13 @@ function App() {
             editingEntryId={editingEntryId}
             handleAddEntry={handleAddEntry}
             handleCancelEditEntry={handleCancelEditEntry}
+            isCustomMode={isCustomMode}
+            handleSwitchToCustomMode={handleSwitchToCustomMode}
+            handleSwitchToFoodMode={handleSwitchToFoodMode}
+            customName={customName}
+            setCustomName={setCustomName}
+            customCalories={customCalories}
+            setCustomCalories={setCustomCalories}
             entries={entries}
             handleEditEntry={handleEditEntry}
             handleDeleteEntry={handleDeleteEntry}
