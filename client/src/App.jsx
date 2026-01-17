@@ -127,26 +127,6 @@ function App() {
     }
   }
 
-  const handleEditGoal = () => {
-    setGoalInput(dailyGoal.toString())
-    setIsEditingGoal(true)
-  }
-
-  const handleSaveGoal = async () => {
-    const newGoal = parseInt(goalInput)
-    if (isNaN(newGoal) || newGoal <= 0) {
-      return
-    }
-
-    try {
-      await setUserGoal(user.uid, newGoal)
-      setDailyGoal(newGoal)
-      setIsEditingGoal(false)
-    } catch (err) {
-      console.error('Error updating goal:', err)
-    }
-  }
-
   // Food management functions
   const handleShowFoodForm = () => {
     setShowFoodForm(true)
@@ -411,6 +391,11 @@ function App() {
               await seedDefaultFoods(user.uid)
               const updatedFoods = await getUserFoods(user.uid)
               setFoods(updatedFoods)
+            }}
+            dailyGoal={dailyGoal}
+            onSaveGoal={async (newGoal) => {
+              await setUserGoal(user.uid, newGoal)
+              setDailyGoal(newGoal)
             }}
           />
         )
