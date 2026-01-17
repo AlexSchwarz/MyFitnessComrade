@@ -10,7 +10,15 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["calorie", "tracking", "fitness", "nutrition"],
+  "keywords": [
+    "calorie",
+    "tracking",
+    "fitness",
+    "nutrition"
+  ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "lucide-react": "^0.562.0"
+  }
 }

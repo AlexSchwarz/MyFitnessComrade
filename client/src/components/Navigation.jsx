@@ -1,25 +1,28 @@
+import { Flame, Apple, Scale, User } from "lucide-react";
+
 function Navigation({ currentTab, onTabChange }) {
   const tabs = [
-    { id: 'calories', label: 'Calories', icon: '🔥' },
-    { id: 'foods', label: 'Foods', icon: '🍎' },
-    { id: 'weight', label: 'Weight', icon: '⚖️' },
-    { id: 'account', label: 'Account', icon: '👤' },
-  ]
+    { id: "calories", label: "Calories", Icon: Flame },
+    { id: "foods", label: "Foods", Icon: Apple },
+    { id: "weight", label: "Weight", Icon: Scale },
+    { id: "account", label: "Account", Icon: User },
+  ];
 
   return (
     <nav className="navigation">
-      {tabs.map(tab => (
+      {tabs.map(({ id, label, Icon }) => (
         <button
-          key={tab.id}
-          className={`nav-tab ${currentTab === tab.id ? 'nav-tab-active' : ''}`}
-          onClick={() => onTabChange(tab.id)}
+          key={id}
+          type="button"
+          className={`nav-tab ${currentTab === id ? "nav-tab-active" : ""}`}
+          onClick={() => onTabChange(id)}
         >
-          <span className="nav-icon">{tab.icon}</span>
-          <span className="nav-label">{tab.label}</span>
+          <Icon className="nav-icon" aria-hidden="true" />
+          <span className="nav-label">{label}</span>
         </button>
       ))}
     </nav>
-  )
+  );
 }
 
-export default Navigation
+export default Navigation;
