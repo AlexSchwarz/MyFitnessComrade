@@ -2,7 +2,6 @@ function WeightView() {
   return (
     <>
       <div className="card">
-        <h2>Weight</h2>
         <div className="empty-state">
           <p>Coming Soon</p>
           <p className="empty-state-hint">
