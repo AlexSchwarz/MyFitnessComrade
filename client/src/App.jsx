@@ -379,45 +379,52 @@ function App() {
   }
 
   if (!user) {
-    return (
-      <div className="app login-screen">
-        <h1>MyFitnessComrade</h1>
-        <p className="subtitle">Your Personal Calorie Tracker</p>
+  return (
+    <div className="app login-screen">
+      <div className="login-container">
+        <div className="login-header">
+          <h2 className="login-title">MyFitnessComrade</h2>
+        </div>
 
-        <div className="card">
-          <h2>Login</h2>
-          <form onSubmit={handleLogin}>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              disabled={loginLoading}
-              className="input"
-            />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              disabled={loginLoading}
-              className="input"
-            />
+        <div className="card login-card">
+          <div className="login-card-inner">
+            <h2>Login</h2>
+            <form onSubmit={handleLogin} className="login-form">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                disabled={loginLoading}
+                className="input"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                disabled={loginLoading}
+                className="input"
+              />
 
-            {loginError && (
-              <div className="error">
-                <p>{loginError}</p>
-              </div>
-            )}
+              {loginError && (
+                <div className="error">
+                  <p>{loginError}</p>
+                </div>
+              )}
 
-            <button type="submit" disabled={loginLoading} className="button">
-              {loginLoading ? 'Logging in...' : 'Login'}
-            </button>
-          </form>
+              <button type="submit" disabled={loginLoading} className="button">
+                {loginLoading ? "Logging in..." : "Login"}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
-    )
-  }
+    </div>
+  );
+}
+
+
 
   const renderCurrentView = () => {
     switch (currentTab) {

@@ -24,11 +24,10 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
+
 
 h1 {
   font-size: 3.2em;
@@ -66,3 +65,52 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Login screen layout */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 16px;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Shared padding so title aligns with card content */
+.login-header,
+.login-card-inner {
+  padding: 16px;
+}
+
+.login-title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Card spacing + modern shape */
+.login-card {
+  margin-top: 12px;
+  border-radius: 16px;
+}
+
+/* Form spacing */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Ensure full-width controls inside login */
+.login-form .input,
+.login-form .button {
+  width: 100%;
+  box-sizing: border-box;
+}
+
