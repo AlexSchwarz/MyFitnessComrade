@@ -140,7 +140,6 @@ function WeightView({
 
       {/* Weight Log */}
       <div className="card">
-        <h2 className="card-title">Weight Log</h2>
         {weightEntries.length === 0 ? (
           <div className="empty-state">
             <p>No entries logged yet</p>
