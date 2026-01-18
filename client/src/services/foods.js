@@ -21,7 +21,6 @@ import { db } from '../config/firebase';
  */
 export async function getUserFoods(userId) {
   try {
-    console.log('🔍 Fetching foods for user:', userId);
     const foodsQuery = query(
       collection(db, 'users', userId, 'foods'),
       orderBy('name', 'asc')
@@ -32,10 +31,9 @@ export async function getUserFoods(userId) {
       id: doc.id,
       ...doc.data(),
     }));
-    console.log('✅ Found foods:', foods.length, foods);
     return foods;
   } catch (error) {
-    console.error('❌ Error getting foods:', error);
+    console.error('Error getting user foods:', error);
     throw error;
   }
 }

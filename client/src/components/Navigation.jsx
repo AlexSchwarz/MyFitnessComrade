@@ -1,10 +1,10 @@
-import { Flame, Apple, Scale, User } from "lucide-react";
+import { Flame, Apple, Scale, User, Clipboard } from "lucide-react";
 
 function Navigation({ currentTab, onTabChange }) {
   const tabs = [
     { id: "calories", label: "Calories", Icon: Flame },
     { id: "foods", label: "Foods", Icon: Apple },
-    { id: "weight", label: "Weight", Icon: Scale },
+    { id: "weight", label: "Weight", Icon: Clipboard },
     { id: "account", label: "Account", Icon: User },
   ];
 

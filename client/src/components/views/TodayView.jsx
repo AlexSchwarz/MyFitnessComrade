@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Pencil, Trash2 } from 'lucide-react'
 import FoodPicker from '../FoodPicker'
 
 function TodayView({
@@ -287,15 +288,17 @@ function TodayView({
                   <div className="entry-actions">
                     <button
                       onClick={() => handleEditEntry(entry)}
-                      className="button-edit"
+                      className="button-icon button-icon-edit"
+                      aria-label="Edit entry"
                     >
-                      Edit
+                      <Pencil size={16} />
                     </button>
                     <button
                       onClick={() => handleDeleteEntry(entry.id)}
-                      className="button-delete"
+                      className="button-icon button-icon-delete"
+                      aria-label="Delete entry"
                     >
-                      Delete
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>

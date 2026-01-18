@@ -93,6 +93,28 @@
   background-color: #444;
 }
 
+.button-secondary {
+  padding: 0.75rem;
+  background-color: transparent;
+  color: #888;
+  border: 1px solid #444;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.button-secondary:hover {
+  border-color: #666;
+  color: #aaa;
+}
+
+.button-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .button-delete {
   padding: 0.25rem 0.75rem;
   background-color: transparent;
@@ -107,6 +129,25 @@
 .button-delete:hover {
   background-color: #ef4444;
   color: #fff;
+}
+
+/* Icon Buttons */
+.button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.75rem;
+  background-color: transparent;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button-icon:hover {
+  border-color: #666;
+  color: #aaa;
 }
 
 .button-group {
@@ -185,7 +226,21 @@
 .goal-edit {
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
+}
+
+.goal-edit .input {
+  margin-bottom: 0;
+}
+
+.goal-edit-buttons {
+  display: flex;
   gap: 0.5rem;
+}
+
+.goal-edit-buttons .button,
+.goal-edit-buttons .button-secondary {
+  flex: 1;
 }
 
 /* Summary Card */
@@ -766,6 +821,9 @@
 
 /* Account View */
 .account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   margin-bottom: 1.5rem;
 }
 

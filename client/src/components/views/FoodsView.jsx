@@ -1,3 +1,5 @@
+import { Pencil, Trash2 } from 'lucide-react'
+
 function FoodsView({
   foods,
   showFoodForm,
@@ -88,15 +90,17 @@ function FoodsView({
                   <div className="food-actions">
                     <button
                       onClick={() => handleEditFood(food)}
-                      className="button-edit"
+                      className="button-icon button-icon-edit"
+                      aria-label="Edit food"
                     >
-                      Edit
+                      <Pencil size={16} />
                     </button>
                     <button
                       onClick={() => handleDeleteFood(food.id)}
-                      className="button-delete"
+                      className="button-icon button-icon-delete"
+                      aria-label="Delete food"
                     >
-                      Delete
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>

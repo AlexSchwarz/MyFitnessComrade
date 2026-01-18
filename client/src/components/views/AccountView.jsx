@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Pencil } from 'lucide-react'
 
 function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSaveGoal }) {
   const [seeding, setSeeding] = useState(false)
@@ -70,14 +71,14 @@ function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSa
                 <div className="goal-edit-buttons">
                   <button
                     onClick={handleSaveGoal}
-                    className="button-small"
+                    className="button"
                     disabled={goalSaving}
                   >
                     {goalSaving ? 'Saving...' : 'Save'}
                   </button>
                   <button
                     onClick={handleCancelEdit}
-                    className="button-small button-cancel"
+                    className="button-secondary"
                     disabled={goalSaving}
                   >
                     Cancel
@@ -87,8 +88,8 @@ function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSa
             ) : (
               <div className="goal-display">
                 <span className="account-value">{dailyGoal} cal</span>
-                <button onClick={handleEditGoal} className="button-edit">
-                  Edit
+                <button onClick={handleEditGoal} className="button-icon" aria-label="Edit goal">
+                  <Pencil size={16} />
                 </button>
               </div>
             )}
