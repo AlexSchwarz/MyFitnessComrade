@@ -191,6 +191,12 @@
   color: #666;
 }
 
+/* Fix datetime-local input width on iOS */
+.input[type="datetime-local"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* Messages */
 .success {
   color: #4ade80;
