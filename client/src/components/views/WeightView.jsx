@@ -29,12 +29,18 @@ function WeightView({
 
   const isSubmitDisabled = weightLoading || !weightFormValue || parseFloat(weightFormValue) <= 0
 
-  // Calculate Y-axis domain with 10 kg padding
+  // Calculate Y-axis domain with 2 kg padding, aligned to 2 kg intervals
   const weights = chartData.map(d => d.weight)
   const minWeight = weights.length > 0 ? Math.min(...weights) : 0
   const maxWeight = weights.length > 0 ? Math.max(...weights) : 100
-  const yMin = Math.max(0, minWeight - 10)
-  const yMax = maxWeight + 10
+  const yMin = Math.floor((minWeight - 2) / 2) * 2
+  const yMax = Math.ceil((maxWeight + 2) / 2) * 2
+
+  // Generate tick values at 2 kg intervals
+  const yTicks = []
+  for (let tick = yMin; tick <= yMax; tick += 2) {
+    yTicks.push(tick)
+  }
 
   return (
     <>
@@ -62,6 +68,8 @@ function WeightView({
                   fontSize={12}
                   tickLine={false}
                   domain={[yMin, yMax]}
+                  ticks={yTicks}
+                  interval={0}
                 />
                 <Tooltip
                   contentStyle={{
