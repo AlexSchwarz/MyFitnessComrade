@@ -3,6 +3,7 @@ import './App.css'
 import { signIn, logout, subscribeToAuthChanges } from './services/firebase'
 import { getUserGoal, setUserGoal, addEntry, getTodaysEntries, updateEntry, deleteEntry } from './services/calories'
 import { getUserFoods, addFood, updateFood, deleteFood, calculateCalories, seedDefaultFoods } from './services/foods'
+import { addWeightEntry, getWeightEntries, updateWeightEntry, deleteWeightEntry } from './services/weights'
 import Navigation from './components/Navigation'
 import TodayView from './components/views/TodayView'
 import FoodsView from './components/views/FoodsView'
@@ -49,6 +50,27 @@ function App() {
   const [customCalories, setCustomCalories] = useState('')
   const [isCustomMode, setIsCustomMode] = useState(false)
 
+  // Weight tracking state
+  const [weightEntries, setWeightEntries] = useState([])
+  const [weightFormValue, setWeightFormValue] = useState('')
+  const [weightFormDateTime, setWeightFormDateTime] = useState('')
+  const [weightError, setWeightError] = useState(null)
+  const [weightLoading, setWeightLoading] = useState(false)
+  const [editingWeightId, setEditingWeightId] = useState(null)
+
+  // Helper to get current datetime in local format for datetime-local input
+  const getCurrentDateTimeLocal = () => {
+    const now = new Date()
+    const offset = now.getTimezoneOffset()
+    const local = new Date(now.getTime() - offset * 60 * 1000)
+    return local.toISOString().slice(0, 16)
+  }
+
+  // Initialize weight form datetime on mount
+  useEffect(() => {
+    setWeightFormDateTime(getCurrentDateTimeLocal())
+  }, [])
+
   // Subscribe to auth state changes
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges((user) => {
@@ -86,15 +108,17 @@ function App() {
 
   const loadUserData = async () => {
     try {
-      const [goal, todaysEntries, userFoods] = await Promise.all([
+      const [goal, todaysEntries, userFoods, userWeightEntries] = await Promise.all([
         getUserGoal(user.uid),
         getTodaysEntries(user.uid),
-        getUserFoods(user.uid)
+        getUserFoods(user.uid),
+        getWeightEntries(user.uid, 30)
       ])
 
       setDailyGoal(goal)
       setEntries(todaysEntries)
       setFoods(userFoods)
+      setWeightEntries(userWeightEntries)
     } catch (err) {
       console.error('Error loading user data:', err)
     }
@@ -366,6 +390,78 @@ function App() {
     }
   }
 
+  // Weight tracking functions
+  const handleEditWeight = (entry) => {
+    setEditingWeightId(entry.id)
+    setWeightFormValue(entry.weight.toString())
+    // Convert ISO string to datetime-local format
+    const entryDate = new Date(entry.entryTime)
+    const offset = entryDate.getTimezoneOffset()
+    const local = new Date(entryDate.getTime() - offset * 60 * 1000)
+    setWeightFormDateTime(local.toISOString().slice(0, 16))
+    setWeightError(null)
+  }
+
+  const handleCancelEditWeight = () => {
+    setEditingWeightId(null)
+    setWeightFormValue('')
+    setWeightFormDateTime(getCurrentDateTimeLocal())
+    setWeightError(null)
+  }
+
+  const handleAddWeight = async (e) => {
+    e.preventDefault()
+
+    const weightNum = parseFloat(weightFormValue)
+    if (isNaN(weightNum) || weightNum <= 0) {
+      setWeightError('Please enter a valid weight')
+      return
+    }
+
+    // Convert datetime-local to ISO string
+    const entryTime = new Date(weightFormDateTime).toISOString()
+
+    try {
+      setWeightLoading(true)
+      setWeightError(null)
+
+      if (editingWeightId) {
+        // Update existing entry
+        await updateWeightEntry(user.uid, editingWeightId, weightNum, entryTime)
+        setWeightEntries(weightEntries.map(e =>
+          e.id === editingWeightId
+            ? { ...e, weight: weightNum, entryTime, updatedAt: new Date().toISOString() }
+            : e
+        ).sort((a, b) => new Date(b.entryTime) - new Date(a.entryTime)))
+        setEditingWeightId(null)
+      } else {
+        // Add new entry
+        const newEntry = await addWeightEntry(user.uid, weightNum, entryTime)
+        setWeightEntries([newEntry, ...weightEntries].sort((a, b) => new Date(b.entryTime) - new Date(a.entryTime)))
+      }
+
+      setWeightFormValue('')
+      setWeightFormDateTime(getCurrentDateTimeLocal())
+    } catch (err) {
+      setWeightError(err.message)
+    } finally {
+      setWeightLoading(false)
+    }
+  }
+
+  const handleDeleteWeight = async (entryId) => {
+    if (!confirm('Are you sure you want to delete this weight entry?')) {
+      return
+    }
+
+    try {
+      await deleteWeightEntry(user.uid, entryId)
+      setWeightEntries(weightEntries.filter(entry => entry.id !== entryId))
+    } catch (err) {
+      console.error('Error deleting weight entry:', err)
+    }
+  }
+
   const remainingCalories = dailyGoal - totalCalories
   const percentageConsumed = (totalCalories / dailyGoal) * 100
 
@@ -478,7 +574,22 @@ function App() {
           />
         )
       case 'weight':
-        return <WeightView />
+        return (
+          <WeightView
+            weightEntries={weightEntries}
+            weightFormValue={weightFormValue}
+            setWeightFormValue={setWeightFormValue}
+            weightFormDateTime={weightFormDateTime}
+            setWeightFormDateTime={setWeightFormDateTime}
+            weightError={weightError}
+            weightLoading={weightLoading}
+            editingWeightId={editingWeightId}
+            handleAddWeight={handleAddWeight}
+            handleEditWeight={handleEditWeight}
+            handleCancelEditWeight={handleCancelEditWeight}
+            handleDeleteWeight={handleDeleteWeight}
+          />
+        )
       case 'account':
         return (
           <AccountView
