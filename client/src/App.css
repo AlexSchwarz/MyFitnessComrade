@@ -881,45 +881,6 @@
   margin: 0 -0.5rem;
 }
 
-.weight-entries-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.weight-entry-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid #333;
-}
-
-.weight-entry-card:last-child {
-  border-bottom: none;
-}
-
-.weight-entry-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.weight-entry-value {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #fff;
-}
-
-.weight-entry-time {
-  font-size: 0.85rem;
-  color: #888;
-}
-
-.weight-entry-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
 /* Navigation - Fixed bottom on mobile by default */
 .navigation {
   display: flex;

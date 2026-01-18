@@ -87,7 +87,7 @@ function WeightView({
 
       {/* Log Weight Entry Form */}
       <div className="card">
-        <h2 className="form-title">{editingWeightId ? 'Edit Weight Entry' : 'Log Weight Entry'}</h2>
+        <h2 className="form-title">{editingWeightId ? 'Edit Weight Entry' : ''}</h2>
         <form onSubmit={handleAddWeight}>
           <input
             type="number"
@@ -146,36 +146,38 @@ function WeightView({
             <p className="empty-state-hint">Add your first weight entry above!</p>
           </div>
         ) : (
-          <div className="weight-entries-list">
+          <div className="entries-list">
             {weightEntries.map(entry => (
-              <div key={entry.id} className="weight-entry-card">
-                <div className="weight-entry-info">
-                  <span className="weight-entry-value">{entry.weight} kg</span>
-                  <span className="weight-entry-time">
-                    {new Date(entry.entryTime).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    })} at {new Date(entry.entryTime).toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                </div>
-                <div className="weight-entry-actions">
-                  <button
-                    onClick={() => handleEditWeight(entry)}
-                    className="button-icon"
-                    aria-label="Edit entry"
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteWeight(entry.id)}
-                    className="button-icon"
-                    aria-label="Delete entry"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+              <div key={entry.id} className="entry-card">
+                <span className="entry-name">{entry.weight} kg</span>
+                <div className="entry-details">
+                  <div className="entry-meta">
+                    <span className="entry-time">
+                      {new Date(entry.entryTime).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })} at {new Date(entry.entryTime).toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <div className="entry-actions">
+                    <button
+                      onClick={() => handleEditWeight(entry)}
+                      className="button-icon"
+                      aria-label="Edit entry"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteWeight(entry.id)}
+                      className="button-icon"
+                      aria-label="Delete entry"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
