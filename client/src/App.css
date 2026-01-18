@@ -687,6 +687,7 @@
   flex: 1;
   overflow-y: auto;
   padding: 0.5rem;
+  padding-bottom: 50vh;
 }
 
 .food-picker-item {
@@ -938,5 +939,9 @@
     max-height: 80vh;
     border-radius: 8px;
     border: 1px solid #333;
+  }
+
+  .food-picker-list {
+    padding-bottom: 0.5rem;
   }
 }
