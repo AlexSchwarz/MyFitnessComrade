@@ -29,6 +29,13 @@ function WeightView({
 
   const isSubmitDisabled = weightLoading || !weightFormValue || parseFloat(weightFormValue) <= 0
 
+  // Calculate Y-axis domain with 10 kg padding
+  const weights = chartData.map(d => d.weight)
+  const minWeight = weights.length > 0 ? Math.min(...weights) : 0
+  const maxWeight = weights.length > 0 ? Math.max(...weights) : 100
+  const yMin = Math.max(0, minWeight - 10)
+  const yMax = maxWeight + 10
+
   return (
     <>
       {/* Weight Chart */}
@@ -54,7 +61,7 @@ function WeightView({
                   stroke="#888"
                   fontSize={12}
                   tickLine={false}
-                  domain={['auto', 'auto']}
+                  domain={[yMin, yMax]}
                 />
                 <Tooltip
                   contentStyle={{
