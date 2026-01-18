@@ -45,6 +45,8 @@
   border-radius: 8px;
   border: 1px solid #333;
   width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .card h2 {
@@ -167,6 +169,8 @@
 /* Input */
 .input {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 0.75rem;
   margin-bottom: 0.75rem;
   border-radius: 4px;
