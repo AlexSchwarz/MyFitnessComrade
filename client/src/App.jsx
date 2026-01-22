@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import './App.css'
 import { signIn, logout, subscribeToAuthChanges } from './services/firebase'
-import { getUserGoal, setUserGoal, addEntry, getTodaysEntries, updateEntry, deleteEntry } from './services/calories'
+import { getUserGoal, setUserGoal, addEntry, getTodaysEntries, updateEntry, deleteEntry, deleteEntriesForDate } from './services/calories'
 import { getUserFoods, addFood, updateFood, deleteFood, calculateCalories, seedDefaultFoods } from './services/foods'
 import { addWeightEntry, getWeightEntries, updateWeightEntry, deleteWeightEntry } from './services/weights'
+import { getDailySummaries, calculateStreak, hasDailySummaries, backfillDailySummaries } from './services/dailySummary'
 import Navigation from './components/Navigation'
 import TodayView from './components/views/TodayView'
 import FoodsView from './components/views/FoodsView'
 import WeightView from './components/views/WeightView'
 import AccountView from './components/views/AccountView'
+import CalorieStatsView from './components/views/CalorieStatsView'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -57,6 +59,17 @@ function App() {
   const [weightError, setWeightError] = useState(null)
   const [weightLoading, setWeightLoading] = useState(false)
   const [editingWeightId, setEditingWeightId] = useState(null)
+  const [selectedWeightDays, setSelectedWeightDays] = useState(30)
+
+  // Stats state
+  const [dailySummaries, setDailySummaries] = useState([])
+  const [selectedStatsDays, setSelectedStatsDays] = useState(7)
+  const [statsLoading, setStatsLoading] = useState(false)
+
+  // Derived streak calculation
+  const currentStreak = useMemo(() => {
+    return calculateStreak(dailySummaries, dailyGoal)
+  }, [dailySummaries, dailyGoal])
 
   // Helper to get current datetime in local format for datetime-local input
   const getCurrentDateTimeLocal = () => {
@@ -105,6 +118,47 @@ function App() {
       setCalculatedCalories(0)
     }
   }, [selectedFoodId, grams, foods])
+
+  // Load stats data when entering stats tab
+  useEffect(() => {
+    if (user && currentTab === 'stats') {
+      loadStatsData()
+    }
+  }, [user, currentTab])
+
+  // Reload weight entries when selected range changes
+  useEffect(() => {
+    if (user) {
+      loadWeightEntries()
+    }
+  }, [user, selectedWeightDays])
+
+  const loadWeightEntries = async () => {
+    try {
+      const entries = await getWeightEntries(user.uid, selectedWeightDays)
+      setWeightEntries(entries)
+    } catch (error) {
+      console.error('Error loading weight entries:', error)
+    }
+  }
+
+  const loadStatsData = async () => {
+    setStatsLoading(true)
+    try {
+      // Check for migration need (first time only)
+      const hasSummaries = await hasDailySummaries(user.uid)
+      if (!hasSummaries) {
+        await backfillDailySummaries(user.uid)
+      }
+
+      const summaries = await getDailySummaries(user.uid, 30)
+      setDailySummaries(summaries)
+    } catch (error) {
+      console.error('Error loading stats:', error)
+    } finally {
+      setStatsLoading(false)
+    }
+  }
 
   const loadUserData = async () => {
     try {
@@ -462,6 +516,27 @@ function App() {
     }
   }
 
+  // Stats functions
+  const handleDeleteDayEntries = async (date) => {
+    if (!confirm(`Are you sure you want to delete all entries for ${date}?`)) {
+      return
+    }
+
+    try {
+      await deleteEntriesForDate(user.uid, date)
+      // Refresh stats data
+      await loadStatsData()
+      // Also refresh today's entries if the deleted date is today
+      const today = new Date().toISOString().split('T')[0]
+      if (date === today) {
+        const todaysEntries = await getTodaysEntries(user.uid)
+        setEntries(todaysEntries)
+      }
+    } catch (err) {
+      console.error('Error deleting day entries:', err)
+    }
+  }
+
   const remainingCalories = dailyGoal - totalCalories
   const percentageConsumed = (totalCalories / dailyGoal) * 100
 
@@ -554,6 +629,18 @@ function App() {
             handleDeleteEntry={handleDeleteEntry}
           />
         )
+      case 'stats':
+        return (
+          <CalorieStatsView
+            dailySummaries={dailySummaries}
+            dailyGoal={dailyGoal}
+            streak={currentStreak}
+            selectedDays={selectedStatsDays}
+            onDaysChange={setSelectedStatsDays}
+            loading={statsLoading}
+            onDeleteDayEntries={handleDeleteDayEntries}
+          />
+        )
       case 'foods':
         return (
           <FoodsView
@@ -588,6 +675,8 @@ function App() {
             handleEditWeight={handleEditWeight}
             handleCancelEditWeight={handleCancelEditWeight}
             handleDeleteWeight={handleDeleteWeight}
+            selectedDays={selectedWeightDays}
+            onDaysChange={setSelectedWeightDays}
           />
         )
       case 'account':

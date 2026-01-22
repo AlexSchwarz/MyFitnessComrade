@@ -156,3 +156,31 @@ export async function deleteEntry(userId, entryId) {
     throw error;
   }
 }
+
+/**
+ * Delete all entries for a specific date
+ * @param {string} userId - User ID
+ * @param {string} date - Date in YYYY-MM-DD format
+ */
+export async function deleteEntriesForDate(userId, date) {
+  try {
+    const entriesQuery = query(
+      collection(db, 'users', userId, 'entries'),
+      where('date', '==', date)
+    );
+    const querySnapshot = await getDocs(entriesQuery);
+
+    if (querySnapshot.empty) {
+      return;
+    }
+
+    const deletePromises = querySnapshot.docs.map(docSnapshot => {
+      return deleteDoc(doc(db, 'users', userId, 'entries', docSnapshot.id));
+    });
+
+    await Promise.all(deletePromises);
+  } catch (error) {
+    console.error('Error deleting entries for date:', error);
+    throw error;
+  }
+}
