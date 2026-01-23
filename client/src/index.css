@@ -3,23 +3,76 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Dark theme (default) */
+  --bg-primary: #242424;
+  --bg-card: #1a1a1a;
+  --bg-secondary: #2a2a2a;
+  --bg-hover: #2a2a2a;
+  --border-color: #333;
+  --border-light: #444;
+  --border-hover: #666;
+  --text-primary: #fff;
+  --text-secondary: #888;
+  --text-muted: #666;
+  --accent-color: #4ade80;
+  --accent-hover: #22c55e;
+  --accent-bg: rgba(74, 222, 128, 0.1);
+  --accent-border: rgba(74, 222, 128, 0.3);
+  --error-color: #ef4444;
+  --error-bg: rgba(239, 68, 68, 0.1);
+  --error-border: rgba(239, 68, 68, 0.3);
+  --warning-color: #fbbf24;
+  --info-color: #3b82f6;
+  --chart-grid: #333;
+  --chart-axis: #888;
+  --overlay-bg: rgba(0, 0, 0, 0.8);
+
+  color-scheme: dark;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}
+
+[data-theme="light"] {
+  --bg-primary: #f5f5f5;
+  --bg-card: #ffffff;
+  --bg-secondary: #f0f0f0;
+  --bg-hover: #e8e8e8;
+  --border-color: #e0e0e0;
+  --border-light: #d0d0d0;
+  --border-hover: #b0b0b0;
+  --text-primary: #1a1a1a;
+  --text-secondary: #666;
+  --text-muted: #999;
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-bg: rgba(59, 130, 246, 0.1);
+  --accent-border: rgba(59, 130, 246, 0.3);
+  --error-color: #dc2626;
+  --error-bg: rgba(220, 38, 38, 0.1);
+  --error-border: rgba(220, 38, 38, 0.3);
+  --warning-color: #d97706;
+  --info-color: #3b82f6;
+  --chart-grid: #e0e0e0;
+  --chart-axis: #666;
+  --overlay-bg: rgba(0, 0, 0, 0.5);
+
+  color-scheme: light;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
 }
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--accent-color);
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  color: var(--accent-hover);
 }
 
 body {
@@ -41,29 +94,16 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--bg-card);
   cursor: pointer;
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: var(--accent-color);
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }
 
 /* Login screen layout */

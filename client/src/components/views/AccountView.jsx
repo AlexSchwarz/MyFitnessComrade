@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { Pencil } from 'lucide-react'
+import { Pencil, Sun, Moon } from 'lucide-react'
+import { useTheme } from '../../contexts/ThemeContext'
 
 function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSaveGoal }) {
+  const { theme, toggleTheme } = useTheme()
   const [seeding, setSeeding] = useState(false)
   const [seedSuccess, setSeedSuccess] = useState(false)
   const [isEditingGoal, setIsEditingGoal] = useState(false)
@@ -93,6 +95,17 @@ function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSa
                 </button>
               </div>
             )}
+          </div>
+          <div className="theme-toggle-field">
+            <div className="theme-toggle-label">
+              <span>Appearance</span>
+              <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+            </div>
+            <button
+              onClick={toggleTheme}
+              className={`theme-toggle-switch ${theme === 'light' ? 'active' : ''}`}
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            />
           </div>
         </div>
         <button onClick={onLogout} className="button button-logout">

@@ -1,5 +1,6 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { useTheme } from '../../contexts/ThemeContext'
 
 function WeightView({
   weightEntries,
@@ -15,6 +16,19 @@ function WeightView({
   handleCancelEditWeight,
   handleDeleteWeight,
 }) {
+  const { theme } = useTheme()
+
+  // Theme-aware colors for charts
+  const colors = {
+    grid: theme === 'dark' ? '#333' : '#e0e0e0',
+    axis: theme === 'dark' ? '#888' : '#666',
+    tooltipBg: theme === 'dark' ? '#1a1a1a' : '#ffffff',
+    tooltipBorder: theme === 'dark' ? '#333' : '#e0e0e0',
+    tooltipText: theme === 'dark' ? '#fff' : '#1a1a1a',
+    tooltipLabel: theme === 'dark' ? '#888' : '#666',
+    accent: theme === 'dark' ? '#4ade80' : '#3b82f6',
+  };
+
   // Prepare chart data - last 30 days, chronological order
   const chartData = [...weightEntries]
     .sort((a, b) => new Date(a.entryTime) - new Date(b.entryTime))
@@ -56,15 +70,15 @@ function WeightView({
           <div className="weight-chart-container">
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
                 <XAxis
                   dataKey="date"
-                  stroke="#888"
+                  stroke={colors.axis}
                   fontSize={12}
                   tickLine={false}
                 />
                 <YAxis
-                  stroke="#888"
+                  stroke={colors.axis}
                   fontSize={12}
                   tickLine={false}
                   domain={[yMin, yMax]}
@@ -73,12 +87,12 @@ function WeightView({
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#1a1a1a',
-                    border: '1px solid #333',
+                    backgroundColor: colors.tooltipBg,
+                    border: `1px solid ${colors.tooltipBorder}`,
                     borderRadius: '4px',
-                    color: '#fff'
+                    color: colors.tooltipText
                   }}
-                  labelStyle={{ color: '#888' }}
+                  labelStyle={{ color: colors.tooltipLabel }}
                   labelFormatter={(label, payload) => {
                     if (payload && payload[0]) {
                       return `${label} at ${payload[0].payload.time}`
@@ -89,10 +103,10 @@ function WeightView({
                 <Line
                   type="monotone"
                   dataKey="weight"
-                  stroke="#4ade80"
+                  stroke={colors.accent}
                   strokeWidth={2}
-                  dot={{ fill: '#4ade80', strokeWidth: 0, r: 4 }}
-                  activeDot={{ r: 6, fill: '#4ade80' }}
+                  dot={{ fill: colors.accent, strokeWidth: 0, r: 4 }}
+                  activeDot={{ r: 6, fill: colors.accent }}
                 />
               </LineChart>
             </ResponsiveContainer>

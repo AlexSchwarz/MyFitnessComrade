@@ -1,5 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts'
 import { Trash2 } from 'lucide-react'
+import { useTheme } from '../../contexts/ThemeContext'
 
 function CalorieStatsView({
   dailySummaries,
@@ -10,7 +11,19 @@ function CalorieStatsView({
   loading,
   onDeleteDayEntries,
 }) {
+  const { theme } = useTheme()
   const threshold = dailyGoal * 1.05;
+
+  // Theme-aware colors for charts
+  const colors = {
+    grid: theme === 'dark' ? '#333' : '#e0e0e0',
+    axis: theme === 'dark' ? '#888' : '#666',
+    tooltipBg: theme === 'dark' ? '#1a1a1a' : '#ffffff',
+    tooltipBorder: theme === 'dark' ? '#333' : '#e0e0e0',
+    tooltipText: theme === 'dark' ? '#fff' : '#1a1a1a',
+    accent: theme === 'dark' ? '#4ade80' : '#3b82f6',
+    error: theme === 'dark' ? '#ef4444' : '#dc2626',
+  };
 
   // Filter to selected range and format for chart
   const chartData = dailySummaries
@@ -69,16 +82,16 @@ function CalorieStatsView({
           <div className="calorie-chart-container">
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                <XAxis dataKey="displayDate" stroke="#888" fontSize={12} tickLine={false} />
-                <YAxis stroke="#888" fontSize={12} tickLine={false} />
-                <ReferenceLine y={threshold} stroke="#888" strokeDasharray="5 5" />
+                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
+                <XAxis dataKey="displayDate" stroke={colors.axis} fontSize={12} tickLine={false} />
+                <YAxis stroke={colors.axis} fontSize={12} tickLine={false} />
+                <ReferenceLine y={threshold} stroke={colors.axis} strokeDasharray="5 5" />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#1a1a1a',
-                    border: '1px solid #333',
+                    backgroundColor: colors.tooltipBg,
+                    border: `1px solid ${colors.tooltipBorder}`,
                     borderRadius: '4px',
-                    color: '#fff'
+                    color: colors.tooltipText
                   }}
                   formatter={(value) => [`${value} cal`, 'Calories']}
                 />
@@ -86,7 +99,7 @@ function CalorieStatsView({
                   {chartData.map((entry, index) => (
                     <Cell
                       key={index}
-                      fill={entry.totalCalories > threshold ? '#ef4444' : '#4ade80'}
+                      fill={entry.totalCalories > threshold ? colors.error : colors.accent}
                     />
                   ))}
                 </Bar>
