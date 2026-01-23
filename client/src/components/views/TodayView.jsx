@@ -274,24 +274,24 @@ function TodayView({
             </div>
           )}
 
-          <div className="button-group">
-            <button
-              type="submit"
-              disabled={isSubmitDisabled}
-              className="button"
-            >
-              {entryLoading ? (editingEntryId ? 'Updating...' : 'Adding...') : (editingEntryId ? 'Update Entry' : 'Add Entry')}
-            </button>
+          <div className="btn-group">
             {editingEntryId && (
               <button
                 type="button"
                 onClick={handleCancelEditEntry}
-                className="button-small"
+                className="btn btn-outline"
                 disabled={entryLoading}
               >
                 Cancel
               </button>
             )}
+            <button
+              type="submit"
+              disabled={isSubmitDisabled}
+              className="btn btn-primary btn-block"
+            >
+              {entryLoading ? (editingEntryId ? 'Updating...' : 'Adding...') : (editingEntryId ? 'Update' : 'Add Entry')}
+            </button>
           </div>
         </form>
       </div>
@@ -324,14 +324,14 @@ function TodayView({
                   <div className="entry-actions">
                     <button
                       onClick={() => handleEditEntry(entry)}
-                      className="button-icon button-icon-edit"
+                      className="btn btn-icon"
                       aria-label="Edit entry"
                     >
                       <Pencil size={16} />
                     </button>
                     <button
                       onClick={() => handleDeleteEntry(entry.id)}
-                      className="button-icon button-icon-delete"
+                      className="btn btn-icon"
                       aria-label="Delete entry"
                     >
                       <Trash2 size={16} />

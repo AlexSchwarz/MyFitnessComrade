@@ -120,14 +120,14 @@ function FoodsView({
                   <div className="food-actions">
                     <button
                       onClick={() => handleEditFood(food)}
-                      className="button-icon button-icon-edit"
+                      className="btn btn-icon"
                       aria-label="Edit food"
                     >
                       <Pencil size={16} />
                     </button>
                     <button
                       onClick={() => handleDeleteFood(food.id)}
-                      className="button-icon button-icon-delete"
+                      className="btn btn-icon"
                       aria-label="Delete food"
                     >
                       <Trash2 size={16} />

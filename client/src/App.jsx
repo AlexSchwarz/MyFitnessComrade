@@ -638,7 +638,7 @@ function App() {
                   </div>
                 )}
 
-                <button type="submit" disabled={authFormLoading} className="button">
+                <button type="submit" disabled={authFormLoading} className="btn btn-primary btn-block">
                   {authFormLoading
                     ? (isRegisterMode ? 'Creating account...' : 'Logging in...')
                     : (isRegisterMode ? 'Create Account' : 'Login')

@@ -70,27 +70,27 @@ function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSa
                   disabled={goalSaving}
                   autoFocus
                 />
-                <div className="goal-edit-buttons">
-                  <button
-                    onClick={handleSaveGoal}
-                    className="button"
-                    disabled={goalSaving}
-                  >
-                    {goalSaving ? 'Saving...' : 'Save'}
-                  </button>
+                <div className="btn-group">
                   <button
                     onClick={handleCancelEdit}
-                    className="button-secondary"
+                    className="btn btn-outline"
                     disabled={goalSaving}
                   >
                     Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveGoal}
+                    className="btn btn-primary"
+                    disabled={goalSaving}
+                  >
+                    {goalSaving ? 'Saving...' : 'Save'}
                   </button>
                 </div>
               </div>
             ) : (
               <div className="goal-display">
                 <span className="account-value">{dailyGoal} cal</span>
-                <button onClick={handleEditGoal} className="button-icon" aria-label="Edit goal">
+                <button onClick={handleEditGoal} className="btn btn-icon" aria-label="Edit goal">
                   <Pencil size={16} />
                 </button>
               </div>
@@ -108,7 +108,7 @@ function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSa
             />
           </div>
         </div>
-        <button onClick={onLogout} className="button button-logout">
+        <button onClick={onLogout} className="btn btn-danger btn-block">
           Logout
         </button>
       </div>

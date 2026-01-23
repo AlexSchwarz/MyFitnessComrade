@@ -139,7 +139,7 @@ function CalorieStatsView({
                       <div className="entry-actions">
                         <button
                           onClick={() => onDeleteDayEntries(day.date)}
-                          className="button-icon"
+                          className="btn btn-icon"
                           aria-label="Delete all entries for this day"
                         >
                           <Trash2 size={16} />

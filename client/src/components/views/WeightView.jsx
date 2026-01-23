@@ -178,27 +178,27 @@ function WeightView({
             </div>
           )}
 
-          <div className="button-group">
-            <button
-              type="submit"
-              disabled={isSubmitDisabled}
-              className="button"
-            >
-              {weightLoading
-                ? (editingWeightId ? 'Updating...' : 'Adding...')
-                : (editingWeightId ? 'Update Entry' : 'Add Entry')
-              }
-            </button>
+          <div className="btn-group">
             {editingWeightId && (
               <button
                 type="button"
                 onClick={handleCancelEditWeight}
-                className="button-secondary"
+                className="btn btn-outline"
                 disabled={weightLoading}
               >
                 Cancel
               </button>
             )}
+            <button
+              type="submit"
+              disabled={isSubmitDisabled}
+              className="btn btn-primary btn-block"
+            >
+              {weightLoading
+                ? (editingWeightId ? 'Updating...' : 'Adding...')
+                : (editingWeightId ? 'Update' : 'Add Entry')
+              }
+            </button>
           </div>
         </form>
       </div>
@@ -230,14 +230,14 @@ function WeightView({
                   <div className="entry-actions">
                     <button
                       onClick={() => handleEditWeight(entry)}
-                      className="button-icon"
+                      className="btn btn-icon"
                       aria-label="Edit entry"
                     >
                       <Pencil size={16} />
                     </button>
                     <button
                       onClick={() => handleDeleteWeight(entry.id)}
-                      className="button-icon"
+                      className="btn btn-icon"
                       aria-label="Delete entry"
                     >
                       <Trash2 size={16} />
