@@ -2,9 +2,16 @@
  * USDA Service
  * Client-side functions for searching and fetching USDA food data
  * All requests go through the Vercel serverless proxy to keep the API key secure
+ *
+ * In local development (npm run dev), falls back to mock data when API is unavailable
  */
 
 import { auth } from '../config/firebase';
+import { searchMockUSDAFoods, getMockUSDAFoodDetails } from './usdaMock';
+
+// Track if we should use mock data (set after first API failure in dev mode)
+const isDev = import.meta.env.DEV;
+let useMockData = false;
 
 /**
  * Get the current user's ID token for API authentication
@@ -29,43 +36,69 @@ export async function searchUSDAFoods(query, pageSize = 25, pageNumber = 1) {
     throw new Error('Search query must be at least 2 characters');
   }
 
-  const token = await getAuthToken();
+  // Use mock data if enabled (dev mode without API)
+  if (useMockData) {
+    console.log('[USDA] Using mock data for search:', query);
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return searchMockUSDAFoods(query, pageSize, pageNumber);
+  }
 
-  const params = new URLSearchParams({
-    query,
-    pageSize: String(pageSize),
-    pageNumber: String(pageNumber),
-  });
+  try {
+    const token = await getAuthToken();
 
-  const response = await fetch(`/api/usda-search?${params}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+    const params = new URLSearchParams({
+      query,
+      pageSize: String(pageSize),
+      pageNumber: String(pageNumber),
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+    const response = await fetch(`/api/usda-search?${params}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
-    if (response.status === 429) {
+    // Check if we got HTML instead of JSON (happens when API routes don't exist)
+    const contentType = response.headers.get('content-type');
+    if (contentType && !contentType.includes('application/json')) {
+      throw new Error('API not available');
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+
+      if (response.status === 429) {
+        throw new USDAError(
+          'USDA search is temporarily unavailable. Please try again later.',
+          'RATE_LIMITED',
+          errorData.retryAfter
+        );
+      }
+
+      if (response.status === 401) {
+        throw new USDAError('Authentication required. Please log in again.', 'UNAUTHORIZED');
+      }
+
       throw new USDAError(
-        'USDA search is temporarily unavailable. Please try again later.',
-        'RATE_LIMITED',
-        errorData.retryAfter
+        errorData.error || 'Failed to search USDA foods',
+        'SEARCH_ERROR'
       );
     }
 
-    if (response.status === 401) {
-      throw new USDAError('Authentication required. Please log in again.', 'UNAUTHORIZED');
+    return response.json();
+  } catch (error) {
+    // In dev mode, fall back to mock data if API is unavailable
+    if (isDev && (error.message === 'API not available' || error.name === 'TypeError')) {
+      console.warn('[USDA] API unavailable, switching to mock data for development');
+      useMockData = true;
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return searchMockUSDAFoods(query, pageSize, pageNumber);
     }
-
-    throw new USDAError(
-      errorData.error || 'Failed to search USDA foods',
-      'SEARCH_ERROR'
-    );
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
@@ -78,41 +111,75 @@ export async function getUSDAFoodDetails(fdcId) {
     throw new Error('fdcId is required');
   }
 
-  const token = await getAuthToken();
+  // Use mock data if enabled (dev mode without API)
+  if (useMockData) {
+    console.log('[USDA] Using mock data for details:', fdcId);
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const mockFood = getMockUSDAFoodDetails(fdcId);
+    if (!mockFood) {
+      throw new USDAError('Food not found', 'NOT_FOUND');
+    }
+    return mockFood;
+  }
 
-  const response = await fetch(`/api/usda-food?fdcId=${encodeURIComponent(fdcId)}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+  try {
+    const token = await getAuthToken();
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+    const response = await fetch(`/api/usda-food?fdcId=${encodeURIComponent(fdcId)}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
-    if (response.status === 429) {
+    // Check if we got HTML instead of JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && !contentType.includes('application/json')) {
+      throw new Error('API not available');
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+
+      if (response.status === 429) {
+        throw new USDAError(
+          'USDA search is temporarily unavailable. Please try again later.',
+          'RATE_LIMITED',
+          errorData.retryAfter
+        );
+      }
+
+      if (response.status === 401) {
+        throw new USDAError('Authentication required. Please log in again.', 'UNAUTHORIZED');
+      }
+
+      if (response.status === 404) {
+        throw new USDAError('Food not found', 'NOT_FOUND');
+      }
+
       throw new USDAError(
-        'USDA search is temporarily unavailable. Please try again later.',
-        'RATE_LIMITED',
-        errorData.retryAfter
+        errorData.error || 'Failed to fetch food details',
+        'FETCH_ERROR'
       );
     }
 
-    if (response.status === 401) {
-      throw new USDAError('Authentication required. Please log in again.', 'UNAUTHORIZED');
+    return response.json();
+  } catch (error) {
+    // In dev mode, fall back to mock data if API is unavailable
+    if (isDev && (error.message === 'API not available' || error.name === 'TypeError')) {
+      console.warn('[USDA] API unavailable, using mock data for development');
+      useMockData = true;
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const mockFood = getMockUSDAFoodDetails(fdcId);
+      if (!mockFood) {
+        throw new USDAError('Food not found', 'NOT_FOUND');
+      }
+      return mockFood;
     }
-
-    if (response.status === 404) {
-      throw new USDAError('Food not found', 'NOT_FOUND');
-    }
-
-    throw new USDAError(
-      errorData.error || 'Failed to fetch food details',
-      'FETCH_ERROR'
-    );
+    throw error;
   }
-
-  return response.json();
 }
 
 /**

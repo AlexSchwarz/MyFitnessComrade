@@ -204,7 +204,7 @@ function FoodPicker({ foods, isOpen, onClose, onSelect, onUSDASelect }) {
                   <div className="food-picker-item-main">
                     <span className="food-picker-item-name">{food.description}</span>
                     <span className="food-picker-item-meta">
-                      {food.dataType}
+                      {food.caloriesPer100g !== null ? `${food.caloriesPer100g} cal/100g` : 'No calorie data'}
                       {food.brandOwner && ` • ${food.brandOwner}`}
                     </span>
                   </div>

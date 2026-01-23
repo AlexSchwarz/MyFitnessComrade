@@ -71,13 +71,25 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     // Transform response to only include needed fields (reduce payload size)
-    const transformedFoods = (data.foods || []).map(food => ({
-      fdcId: food.fdcId,
-      description: food.description,
-      dataType: food.dataType,
-      brandOwner: food.brandOwner || null,
-      brandName: food.brandName || null,
-    }));
+    const transformedFoods = (data.foods || []).map(food => {
+      // Extract calories from foodNutrients (nutrientId 1008 = Energy in kcal)
+      let caloriesPer100g = null;
+      if (food.foodNutrients) {
+        const energyNutrient = food.foodNutrients.find(n => n.nutrientId === 1008);
+        if (energyNutrient && energyNutrient.value !== undefined) {
+          caloriesPer100g = Math.round(energyNutrient.value);
+        }
+      }
+
+      return {
+        fdcId: food.fdcId,
+        description: food.description,
+        dataType: food.dataType,
+        brandOwner: food.brandOwner || null,
+        brandName: food.brandName || null,
+        caloriesPer100g,
+      };
+    });
 
     return res.status(200).json({
       foods: transformedFoods,

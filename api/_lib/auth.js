@@ -18,12 +18,19 @@ function getFirebaseAdmin() {
     }
 
     try {
-      const credentials = JSON.parse(serviceAccount);
+      // Trim any whitespace that might have been added
+      const trimmedAccount = serviceAccount.trim();
+      if (!trimmedAccount.startsWith('{')) {
+        console.error('FIREBASE_SERVICE_ACCOUNT_KEY does not start with {. First 50 chars:', trimmedAccount.substring(0, 50));
+        return null;
+      }
+      const credentials = JSON.parse(trimmedAccount);
       initializeApp({
         credential: cert(credentials),
       });
     } catch (error) {
-      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', error);
+      console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', error.message);
+      console.error('Value length:', serviceAccount?.length, 'First 100 chars:', serviceAccount?.substring(0, 100));
       return null;
     }
   }

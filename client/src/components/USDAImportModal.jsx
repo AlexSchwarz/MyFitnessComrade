@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Download, AlertCircle, CheckCircle } from 'lucide-react'
-import { getUSDAFoodDetails } from '../services/usda'
 
 function USDAImportModal({
   isOpen,
@@ -10,60 +9,46 @@ function USDAImportModal({
   existingFood,
   importLoading
 }) {
-  const [foodDetails, setFoodDetails] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [name, setName] = useState('')
+  const [calories, setCalories] = useState('')
   const [error, setError] = useState(null)
 
-  // Manual calories input (for when auto-detection fails)
-  const [manualCalories, setManualCalories] = useState('')
-
-  // Fetch food details when modal opens with a new food
   useEffect(() => {
     if (!isOpen || !usdaFood) {
-      setFoodDetails(null)
+      setName('')
+      setCalories('')
       setError(null)
-      setManualCalories('')
       return
     }
 
-    const fetchDetails = async () => {
-      setLoading(true)
-      setError(null)
+    setName(usdaFood.description || '')
 
-      try {
-        const details = await getUSDAFoodDetails(usdaFood.fdcId)
-        setFoodDetails(details)
-
-        // Pre-fill manual calories if available
-        if (details.caloriesPer100g) {
-          setManualCalories(details.caloriesPer100g.toString())
-        } else {
-          setManualCalories('')
-        }
-      } catch (err) {
-        setError(err.message)
-        setFoodDetails(null)
-      } finally {
-        setLoading(false)
-      }
+    if (usdaFood.caloriesPer100g !== null && usdaFood.caloriesPer100g !== undefined) {
+      setCalories(usdaFood.caloriesPer100g.toString())
+    } else {
+      setCalories('')
     }
-
-    fetchDetails()
   }, [isOpen, usdaFood?.fdcId])
 
   const handleImport = () => {
-    const caloriesNum = parseFloat(manualCalories)
-    if (isNaN(caloriesNum) || caloriesNum <= 0) {
-      setError('Please enter valid calories per 100g')
+    if (!name.trim()) {
+      setError('Please enter a name')
       return
     }
 
+    const caloriesNum = parseFloat(calories)
+    if (isNaN(caloriesNum) || caloriesNum <= 0) {
+      setError('Please enter valid calories')
+      return
+    }
+
+    setError(null)
     onImport({
       fdcId: usdaFood.fdcId,
-      name: foodDetails?.description || usdaFood.description,
+      name: name.trim(),
       caloriesPer100g: caloriesNum,
-      dataType: foodDetails?.dataType || usdaFood.dataType,
-      brandOwner: foodDetails?.brandOwner || usdaFood.brandOwner,
+      dataType: usdaFood.dataType,
+      brandOwner: usdaFood.brandOwner,
     })
   }
 
@@ -71,129 +56,114 @@ function USDAImportModal({
     onClose(existingFood)
   }
 
-  if (!isOpen) return null
+  if (!isOpen || !usdaFood) return null
 
   const showDuplicateWarning = existingFood !== null
+  const hasCalorieData = usdaFood.caloriesPer100g !== null && usdaFood.caloriesPer100g !== undefined
 
   return (
-    <div className="usda-import-overlay" onClick={onClose}>
-      <div className="usda-import-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="usda-import-header">
+    <div className="modal-overlay" onClick={() => onClose()}>
+      <div className="modal-dialog modal-sm" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
           <h2>Import Food</h2>
           <button
-            className="usda-import-close"
-            onClick={onClose}
+            className="modal-close"
+            onClick={() => onClose()}
             aria-label="Close"
           >
-            ×
+            &times;
           </button>
         </div>
 
-        <div className="usda-import-content">
-          {loading && (
-            <div className="usda-import-loading">
-              <p>Loading food details...</p>
+        <div className="modal-body">
+          {showDuplicateWarning && (
+            <div className="notice notice-info">
+              <CheckCircle size={18} />
+              <div>
+                <strong>Already in your library</strong>
+                <span>Saved as "{existingFood.name}"</span>
+              </div>
             </div>
           )}
 
-          {error && !loading && (
-            <div className="usda-import-error">
-              <AlertCircle size={20} />
-              <p>{error}</p>
-              <button className="button button-secondary" onClick={onClose}>
-                Go Back
-              </button>
+          {error && (
+            <div className="notice notice-error">
+              <AlertCircle size={16} />
+              <span>{error}</span>
             </div>
           )}
 
-          {!loading && !error && foodDetails && (
+          <div className="form-group">
+            <label htmlFor="import-name">Name</label>
+            <input
+              id="import-name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Food name"
+              className="input"
+              autoFocus
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="import-calories">
+              Calories per 100g
+              {!hasCalorieData && <span className="label-hint"> (required)</span>}
+            </label>
+            <input
+              id="import-calories"
+              type="number"
+              value={calories}
+              onChange={(e) => setCalories(e.target.value)}
+              placeholder="e.g. 120"
+              className="input"
+              min="0"
+              step="1"
+            />
+            {!hasCalorieData && (
+              <span className="form-hint">Not available from USDA</span>
+            )}
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          {showDuplicateWarning ? (
             <>
-              {showDuplicateWarning && (
-                <div className="usda-import-duplicate">
-                  <CheckCircle size={20} />
-                  <div>
-                    <p><strong>Already imported!</strong></p>
-                    <p>This food is already in your library as "{existingFood.name}"</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="usda-import-details">
-                <div className="usda-import-field">
-                  <label>Name</label>
-                  <p className="usda-import-value">{foodDetails.description}</p>
-                </div>
-
-                <div className="usda-import-field">
-                  <label>Data Type</label>
-                  <p className="usda-import-value usda-import-meta">
-                    {foodDetails.dataType}
-                    {foodDetails.brandOwner && ` • ${foodDetails.brandOwner}`}
-                  </p>
-                </div>
-
-                <div className="usda-import-field">
-                  <label htmlFor="calories-input">
-                    Calories per 100g
-                    {!foodDetails.hasCalorieData && (
-                      <span className="required-indicator"> (required)</span>
-                    )}
-                  </label>
-                  <input
-                    id="calories-input"
-                    type="number"
-                    value={manualCalories}
-                    onChange={(e) => setManualCalories(e.target.value)}
-                    placeholder="Enter calories per 100g"
-                    className="input"
-                    min="0"
-                    step="1"
-                  />
-                  {!foodDetails.hasCalorieData && (
-                    <p className="usda-import-hint">
-                      Calorie data could not be automatically determined. Please enter manually.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="usda-import-actions">
-                {showDuplicateWarning ? (
-                  <>
-                    <button
-                      className="button button-primary"
-                      onClick={handleUseExisting}
-                    >
-                      <CheckCircle size={18} />
-                      Use Existing
-                    </button>
-                    <button
-                      className="button button-secondary"
-                      onClick={onClose}
-                    >
-                      Cancel
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      className="button button-primary"
-                      onClick={handleImport}
-                      disabled={importLoading || !manualCalories}
-                    >
-                      <Download size={18} />
-                      {importLoading ? 'Importing...' : 'Import'}
-                    </button>
-                    <button
-                      className="button button-secondary"
-                      onClick={onClose}
-                      disabled={importLoading}
-                    >
-                      Cancel
-                    </button>
-                  </>
-                )}
-              </div>
+              <button
+                type="button"
+                className="btn-text"
+                onClick={() => onClose()}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleUseExisting}
+              >
+                Use Existing
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="btn-text"
+                onClick={() => onClose()}
+                disabled={importLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleImport}
+                disabled={importLoading || !name.trim() || !calories}
+              >
+                <Download size={16} />
+                {importLoading ? 'Importing...' : 'Import'}
+              </button>
             </>
           )}
         </div>
