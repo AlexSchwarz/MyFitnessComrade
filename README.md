@@ -43,15 +43,64 @@ MyFitnessComrade is a modern calorie tracking application that helps users manag
 
 ## Architecture
 
-This is a **client-only application** that communicates directly with Firebase services. No backend server required.
+### Serverless Client-Only Design
+
+MyFitnessComrade is a **fully client-side application** with **no backend server**. The React app communicates directly with Firebase services using the Firebase JavaScript SDK. This architecture was chosen for simplicity, cost-effectiveness, and ease of deployment.
+
+The application runs entirely in the user's browser as a Single Page Application (SPA) built with React and Vite. It consists of three main layers: the **Views** (UI components like TodayView, FoodsView, WeightView), the **Services** (data access functions for calories, foods, weights), and **Contexts** (state management like ThemeContext).
+
+The React app uses the Firebase JavaScript SDK to communicate over HTTPS directly with Firebase's cloud services. **Firebase Authentication** handles user login with email/password, session management, and secure token generation. **Cloud Firestore** serves as the NoSQL database, storing user data in collections: `users/{userId}`, `foods/{foodId}`, `entries/{entryId}`, `weightEntries/{id}`, and `dailySummaries/{id}`.
+
+There is no Express server, no custom API endpoints, and no server-side code. All business logic runs in the browser, and all database operations go directly from the client to Firestore.
+
+### Why No Backend?
+
+| Aspect | Traditional Backend | This App (Serverless) |
+|--------|--------------------|-----------------------|
+| **Server** | Express/Node.js server required | No server needed |
+| **API Layer** | Custom REST/GraphQL endpoints | Direct Firebase SDK calls |
+| **Authentication** | JWT handling, session management | Firebase Auth handles everything |
+| **Database Access** | Server queries database | Client queries Firestore directly |
+| **Security** | Server-side validation | Firestore Security Rules |
+| **Hosting** | Server + static files | Static files only (Vercel) |
+| **Cost** | Server runtime costs | Pay-per-use (Firebase free tier) |
+| **Scaling** | Manual scaling needed | Auto-scales with Firebase |
+
+### Security Without a Backend
+
+Since there's no backend to protect the database, security is enforced through **Firestore Security Rules**:
+
+- Users can only read/write their own data (rules check `request.auth.uid`)
+- All operations require authentication
+- Data validation happens at the Firestore level
+- The Firebase SDK handles secure token management
+
+### Data Flow Example
 
 ```
-Client (React + Vite)
-    ↓
-Firebase SDK
-    ↓
-Firebase Auth + Firestore
+User logs a meal:
+1. User clicks "Add Entry" in TodayView.jsx
+2. React calls addEntry() from services/calories.js
+3. Firebase SDK sends authenticated request to Firestore
+4. Firestore Security Rules verify user owns the data
+5. Entry is written to entries/{entryId} collection
+6. React state updates, UI re-renders with new entry
 ```
+
+### Trade-offs of This Architecture
+
+**Advantages:**
+- Zero server maintenance
+- No backend deployment complexity
+- Automatic scaling with Firebase
+- Lower hosting costs (static site hosting)
+- Simpler development workflow
+
+**Limitations:**
+- Business logic runs in the client (visible to users)
+- Complex queries limited by Firestore capabilities
+- No server-side processing (e.g., scheduled tasks, webhooks)
+- Vendor lock-in to Firebase ecosystem
 
 ## Project Structure
 
