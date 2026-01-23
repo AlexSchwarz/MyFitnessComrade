@@ -132,7 +132,7 @@ function USDAImportModal({
             <>
               <button
                 type="button"
-                className="btn-text"
+                className="btn btn-outline"
                 onClick={() => onClose()}
               >
                 Cancel
@@ -149,7 +149,7 @@ function USDAImportModal({
             <>
               <button
                 type="button"
-                className="btn-text"
+                className="btn btn-outline"
                 onClick={() => onClose()}
                 disabled={importLoading}
               >

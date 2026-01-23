@@ -1,4 +1,6 @@
-import { Pencil, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { Pencil, Trash2, Database } from 'lucide-react'
+import FoodPicker from '../FoodPicker'
 
 function FoodsView({
   foods,
@@ -16,6 +18,21 @@ function FoodsView({
   handleSaveFood,
   handleDeleteFood,
 }) {
+  const [isPickerOpen, setIsPickerOpen] = useState(false)
+
+  const handleUSDASelect = (usdaFood) => {
+    // Pre-fill form with USDA data
+    setFoodFormName(usdaFood.description || '')
+    if (usdaFood.caloriesPer100g !== null && usdaFood.caloriesPer100g !== undefined) {
+      setFoodFormCalories(usdaFood.caloriesPer100g.toString())
+    }
+    setIsPickerOpen(false)
+  }
+
+  const handleOpenUSDASearch = () => {
+    setIsPickerOpen(true)
+  }
+
   return (
     <>
       {/* Add/Edit Food Form */}
@@ -47,18 +64,31 @@ function FoodsView({
               </div>
             )}
 
-            <div className="button-group">
-              <button type="submit" disabled={foodLoading} className="button">
-                {foodLoading ? 'Saving...' : editingFoodId ? 'Update Food' : 'Add Food'}
-              </button>
-              <button
-                type="button"
-                onClick={handleCancelFoodForm}
-                className="button-small"
-                disabled={foodLoading}
-              >
-                Cancel
-              </button>
+            <div className="food-form-actions">
+              {!editingFoodId && (
+                <button
+                  type="button"
+                  onClick={handleOpenUSDASearch}
+                  className="btn btn-secondary"
+                  disabled={foodLoading}
+                >
+                  <Database size={16} />
+                  Import from USDA
+                </button>
+              )}
+              <div className="food-form-buttons">
+                <button
+                  type="button"
+                  onClick={handleCancelFoodForm}
+                  className="btn btn-outline"
+                  disabled={foodLoading}
+                >
+                  Cancel
+                </button>
+                <button type="submit" disabled={foodLoading} className="btn btn-primary">
+                  {foodLoading ? 'Saving...' : editingFoodId ? 'Update' : 'Add Food'}
+                </button>
+              </div>
             </div>
           </form>
         </div>
@@ -109,6 +139,15 @@ function FoodsView({
           </div>
         )}
       </div>
+
+      <FoodPicker
+        foods={[]}
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        onSelect={() => {}}
+        onUSDASelect={handleUSDASelect}
+        usdaOnly={true}
+      />
     </>
   )
 }

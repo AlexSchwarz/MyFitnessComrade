@@ -5,9 +5,16 @@ import { searchUSDAFoods } from '../services/usda'
 // Debounce delay for USDA search
 const USDA_DEBOUNCE_MS = 400
 
-function FoodPicker({ foods, isOpen, onClose, onSelect, onUSDASelect }) {
+function FoodPicker({ foods, isOpen, onClose, onSelect, onUSDASelect, defaultSource = 'my-foods', usdaOnly = false }) {
   const [searchQuery, setSearchQuery] = useState('')
-  const [source, setSource] = useState('my-foods') // 'my-foods' or 'usda'
+  const [source, setSource] = useState(defaultSource) // 'my-foods' or 'usda'
+
+  // Reset source when picker opens
+  useEffect(() => {
+    if (isOpen) {
+      setSource(usdaOnly ? 'usda' : defaultSource)
+    }
+  }, [isOpen, defaultSource, usdaOnly])
 
   // USDA search state
   const [usdaResults, setUsdaResults] = useState([])
@@ -115,7 +122,7 @@ function FoodPicker({ foods, isOpen, onClose, onSelect, onUSDASelect }) {
     <div className="food-picker-overlay" onClick={resetAndClose}>
       <div className="food-picker-modal" onClick={(e) => e.stopPropagation()}>
         <div className="food-picker-header">
-          <h2>Choose Food</h2>
+          <h2>{usdaOnly ? 'Search USDA Database' : 'Choose Food'}</h2>
           <button
             className="food-picker-close"
             onClick={resetAndClose}
@@ -125,23 +132,25 @@ function FoodPicker({ foods, isOpen, onClose, onSelect, onUSDASelect }) {
           </button>
         </div>
 
-        {/* Source Toggle */}
-        <div className="food-picker-source-toggle">
-          <button
-            className={`source-toggle-btn ${source === 'my-foods' ? 'active' : ''}`}
-            onClick={() => handleSourceChange('my-foods')}
-          >
-            <User size={16} />
-            <span>My Foods</span>
-          </button>
-          <button
-            className={`source-toggle-btn ${source === 'usda' ? 'active' : ''}`}
-            onClick={() => handleSourceChange('usda')}
-          >
-            <Database size={16} />
-            <span>USDA Database</span>
-          </button>
-        </div>
+        {/* Source Toggle - only show when not usdaOnly */}
+        {!usdaOnly && (
+          <div className="food-picker-source-toggle">
+            <button
+              className={`source-toggle-btn ${source === 'my-foods' ? 'active' : ''}`}
+              onClick={() => handleSourceChange('my-foods')}
+            >
+              <User size={16} />
+              <span>My Foods</span>
+            </button>
+            <button
+              className={`source-toggle-btn ${source === 'usda' ? 'active' : ''}`}
+              onClick={() => handleSourceChange('usda')}
+            >
+              <Database size={16} />
+              <span>USDA Database</span>
+            </button>
+          </div>
+        )}
 
         <div className="food-picker-search">
           <Search size={18} className="search-icon" />
