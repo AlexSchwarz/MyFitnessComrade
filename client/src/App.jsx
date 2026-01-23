@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import './App.css'
-import { signIn, logout, subscribeToAuthChanges } from './services/firebase'
+import { signIn, signUp, logout, subscribeToAuthChanges } from './services/firebase'
 import { getUserGoal, setUserGoal, addEntry, getTodaysEntries, updateEntry, deleteEntry, deleteEntriesForDate } from './services/calories'
 import { getUserFoods, addFood, updateFood, deleteFood, calculateCalories, seedDefaultFoods } from './services/foods'
 import { addWeightEntry, getWeightEntries, updateWeightEntry, deleteWeightEntry } from './services/weights'
@@ -19,11 +19,13 @@ function App() {
   // Navigation state
   const [currentTab, setCurrentTab] = useState('calories')
 
-  // Login state
+  // Login/Register state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loginError, setLoginError] = useState(null)
-  const [loginLoading, setLoginLoading] = useState(false)
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [authError, setAuthError] = useState(null)
+  const [authFormLoading, setAuthFormLoading] = useState(false)
+  const [isRegisterMode, setIsRegisterMode] = useState(false)
 
   // Calorie tracking state
   const [dailyGoal, setDailyGoal] = useState(2000)
@@ -178,24 +180,36 @@ function App() {
     }
   }
 
-  const handleLogin = async (e) => {
+  const handleAuth = async (e) => {
     e.preventDefault()
 
     if (!email.trim() || !password.trim()) {
-      setLoginError('Please enter email and password')
+      setAuthError('Please enter email and password')
+      return
+    }
+
+    if (isRegisterMode && password !== confirmPassword) {
+      setAuthError('Passwords do not match')
       return
     }
 
     try {
-      setLoginLoading(true)
-      setLoginError(null)
-      await signIn(email, password)
+      setAuthFormLoading(true)
+      setAuthError(null)
+
+      if (isRegisterMode) {
+        await signUp(email, password)
+      } else {
+        await signIn(email, password)
+      }
+
       setEmail('')
       setPassword('')
+      setConfirmPassword('')
     } catch (err) {
-      setLoginError(err.message)
+      setAuthError(err.message)
     } finally {
-      setLoginLoading(false)
+      setAuthFormLoading(false)
     }
   }
 
@@ -550,50 +564,80 @@ function App() {
   }
 
   if (!user) {
-  return (
-    <div className="app login-screen">
-      <div className="login-container">
-        <div className="login-header">
-          <h2 className="login-title">MyFitnessComrade</h2>
-        </div>
+    return (
+      <div className="app login-screen">
+        <div className="login-container">
+          <div className="login-header">
+            <h2 className="login-title">MyFitnessComrade</h2>
+          </div>
 
-        <div className="card login-card">
-          <div className="login-card-inner">
-            <h2>Login</h2>
-            <form onSubmit={handleLogin} className="login-form">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                disabled={loginLoading}
-                className="input"
-              />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                disabled={loginLoading}
-                className="input"
-              />
+          <div className="card login-card">
+            <div className="login-card-inner">
+              <h2>{isRegisterMode ? 'Register' : 'Login'}</h2>
+              <form onSubmit={handleAuth} className="login-form">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  disabled={authFormLoading}
+                  className="input"
+                />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  disabled={authFormLoading}
+                  className="input"
+                />
 
-              {loginError && (
-                <div className="error">
-                  <p>{loginError}</p>
-                </div>
-              )}
+                {isRegisterMode && (
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm Password"
+                    disabled={authFormLoading}
+                    className="input"
+                  />
+                )}
 
-              <button type="submit" disabled={loginLoading} className="button">
-                {loginLoading ? "Logging in..." : "Login"}
-              </button>
-            </form>
+                {authError && (
+                  <div className="error">
+                    <p>{authError}</p>
+                  </div>
+                )}
+
+                <button type="submit" disabled={authFormLoading} className="button">
+                  {authFormLoading
+                    ? (isRegisterMode ? 'Creating account...' : 'Logging in...')
+                    : (isRegisterMode ? 'Create Account' : 'Login')
+                  }
+                </button>
+              </form>
+
+              <p className="auth-toggle-text">
+                {isRegisterMode ? 'Already have an account?' : "Don't have an account?"}{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRegisterMode(!isRegisterMode)
+                    setAuthError(null)
+                    setConfirmPassword('')
+                  }}
+                  className="auth-toggle-link"
+                  disabled={authFormLoading}
+                >
+                  {isRegisterMode ? 'Login' : 'Register'}
+                </button>
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
+    )
+  }
 
 
 

@@ -154,3 +154,33 @@ button:focus-visible {
   box-sizing: border-box;
 }
 
+/* Auth toggle (login/register switch) */
+.auth-toggle-text {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+.auth-toggle-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent-color);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.auth-toggle-link:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+.auth-toggle-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+

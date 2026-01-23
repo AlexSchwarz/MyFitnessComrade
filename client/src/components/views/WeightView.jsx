@@ -15,6 +15,8 @@ function WeightView({
   handleEditWeight,
   handleCancelEditWeight,
   handleDeleteWeight,
+  selectedDays,
+  onDaysChange,
 }) {
   const { theme } = useTheme()
 
@@ -43,24 +45,57 @@ function WeightView({
 
   const isSubmitDisabled = weightLoading || !weightFormValue || parseFloat(weightFormValue) <= 0
 
-  // Calculate Y-axis domain with 2 kg padding, aligned to 2 kg intervals
+  // Calculate Y-axis domain with padding, scaled to data range
   const weights = chartData.map(d => d.weight)
   const minWeight = weights.length > 0 ? Math.min(...weights) : 0
   const maxWeight = weights.length > 0 ? Math.max(...weights) : 100
-  const yMin = Math.floor((minWeight - 2) / 2) * 2
-  const yMax = Math.ceil((maxWeight + 2) / 2) * 2
+  const range = maxWeight - minWeight
 
-  // Generate tick values at 2 kg intervals
+  // Choose tick interval to ensure at least 8 ticks (whole numbers only)
+  const minTicks = 8
+  let tickInterval = Math.max(1, Math.ceil(range / minTicks))
+
+  // Round interval to nice values (1, 2, 5, 10, 20, 50, etc.)
+  const niceIntervals = [1, 2, 5, 10, 20, 50, 100]
+  tickInterval = niceIntervals.find(n => n >= tickInterval) || tickInterval
+
+  // Calculate domain with padding, aligned to tick interval
+  const yMin = Math.floor((minWeight - tickInterval) / tickInterval) * tickInterval
+  const yMax = Math.ceil((maxWeight + tickInterval) / tickInterval) * tickInterval
+
+  // Generate tick values at calculated interval (whole numbers only)
   const yTicks = []
-  for (let tick = yMin; tick <= yMax; tick += 2) {
+  for (let tick = yMin; tick <= yMax; tick += tickInterval) {
     yTicks.push(tick)
+  }
+
+  // Get chart title based on selected days
+  const getChartTitle = () => {
+    if (selectedDays >= 9999) return 'All Time'
+    return `Last ${selectedDays} Days`
   }
 
   return (
     <>
+      {/* Days Selector */}
+      <div className="card">
+        <div className="days-selector">
+          {[30, 90, 9999].map(days => (
+            <button
+              key={days}
+              type="button"
+              className={`days-btn ${selectedDays === days ? 'days-btn-active' : ''}`}
+              onClick={() => onDaysChange(days)}
+            >
+              {days >= 9999 ? 'Max' : `${days} days`}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Weight Chart */}
       <div className="card">
-        <h2 className="card-title">Last 30 Days</h2>
+        <h2 className="card-title">{getChartTitle()}</h2>
         {chartData.length === 0 ? (
           <div className="empty-state">
             <p>No weight entries yet</p>
@@ -76,6 +111,7 @@ function WeightView({
                   stroke={colors.axis}
                   fontSize={12}
                   tickLine={false}
+                  padding={{ left: 20, right: 20 }}
                 />
                 <YAxis
                   stroke={colors.axis}
