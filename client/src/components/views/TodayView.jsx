@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import FoodPicker from '../FoodPicker'
+import USDAImportModal from '../USDAImportModal'
 
 function TodayView({
   // Summary props
@@ -33,13 +34,48 @@ function TodayView({
   entries,
   handleEditEntry,
   handleDeleteEntry,
+  // USDA import props
+  onUSDAImport,
+  usdaImportLoading,
+  findExistingUSDAFood,
 }) {
   const [isPickerOpen, setIsPickerOpen] = useState(false)
+  const [usdaImportFood, setUsdaImportFood] = useState(null)
+  const [existingUSDAFood, setExistingUSDAFood] = useState(null)
 
   const selectedFood = foods.find(f => f.id === selectedFoodId)
 
   const handleFoodSelect = (food) => {
     setSelectedFoodId(food.id)
+  }
+
+  const handleUSDASelect = async (usdaFood) => {
+    // Check for existing import
+    const existing = findExistingUSDAFood ? findExistingUSDAFood(usdaFood.fdcId) : null
+    setExistingUSDAFood(existing)
+    setUsdaImportFood(usdaFood)
+  }
+
+  const handleUSDAImport = async (foodData) => {
+    const importedFood = await onUSDAImport(foodData)
+    if (importedFood) {
+      // Select the newly imported food
+      setSelectedFoodId(importedFood.id)
+      // Close modals
+      setUsdaImportFood(null)
+      setExistingUSDAFood(null)
+      setIsPickerOpen(false)
+    }
+  }
+
+  const handleUSDAImportClose = (existingFoodToSelect) => {
+    if (existingFoodToSelect) {
+      // User chose to use existing food
+      setSelectedFoodId(existingFoodToSelect.id)
+      setIsPickerOpen(false)
+    }
+    setUsdaImportFood(null)
+    setExistingUSDAFood(null)
   }
 
   // Determine if submit should be disabled
@@ -313,6 +349,16 @@ function TodayView({
         isOpen={isPickerOpen}
         onClose={() => setIsPickerOpen(false)}
         onSelect={handleFoodSelect}
+        onUSDASelect={handleUSDASelect}
+      />
+
+      <USDAImportModal
+        isOpen={usdaImportFood !== null}
+        usdaFood={usdaImportFood}
+        onClose={handleUSDAImportClose}
+        onImport={handleUSDAImport}
+        existingFood={existingUSDAFood}
+        importLoading={usdaImportLoading}
       />
     </>
   )

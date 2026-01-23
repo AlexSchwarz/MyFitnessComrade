@@ -1159,3 +1159,368 @@
 .theme-toggle-switch.active::after {
   transform: translateX(24px);
 }
+
+/* =====================================================
+   USDA Food Import Styles
+   ===================================================== */
+
+/* Food Picker Source Toggle */
+.food-picker-source-toggle {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.source-toggle-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.source-toggle-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.source-toggle-btn.active {
+  background-color: var(--accent-bg);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+/* Food Picker Search with Icon */
+.food-picker-search {
+  position: relative;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.food-picker-search .search-icon {
+  position: absolute;
+  left: 1.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.food-picker-search .input {
+  padding-left: 2.75rem;
+  margin-bottom: 0;
+}
+
+/* USDA Item Styles */
+.food-picker-item.usda-item {
+  padding: 0.875rem 1rem;
+}
+
+.food-picker-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.food-picker-item-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Food Picker States */
+.food-picker-loading,
+.food-picker-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.food-picker-loading p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.food-picker-error {
+  color: var(--error-color);
+  background-color: var(--error-bg);
+  margin: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--error-border);
+}
+
+.food-picker-error p {
+  margin: 0;
+}
+
+/* Load More Button */
+.food-picker-load-more {
+  display: block;
+  width: calc(100% - 1rem);
+  margin: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.food-picker-load-more:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+/* Results Count */
+.food-picker-results-count {
+  text-align: center;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* =====================================================
+   USDA Import Modal Styles
+   ===================================================== */
+
+.usda-import-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--overlay-bg);
+  z-index: 1001; /* Above food picker */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.usda-import-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 450px;
+  max-height: 90vh;
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.usda-import-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.usda-import-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+
+.usda-import-close {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.75rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.usda-import-close:hover {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.usda-import-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+/* Import Modal States */
+.usda-import-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+}
+
+.usda-import-loading p {
+  margin: 0;
+}
+
+.usda-import-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--error-color);
+}
+
+.usda-import-error p {
+  margin: 0;
+}
+
+/* Duplicate Warning */
+.usda-import-duplicate {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.usda-import-duplicate svg {
+  flex-shrink: 0;
+  color: var(--accent-color);
+  margin-top: 0.125rem;
+}
+
+.usda-import-duplicate p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.usda-import-duplicate p:first-child {
+  margin-bottom: 0.25rem;
+}
+
+/* Import Details */
+.usda-import-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.usda-import-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.usda-import-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.usda-import-field .required-indicator {
+  color: var(--error-color);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.usda-import-value {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.usda-import-value.usda-import-meta {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.usda-import-field .input {
+  margin-bottom: 0;
+}
+
+.usda-import-hint {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Import Actions */
+.usda-import-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.usda-import-actions .button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.usda-import-actions .button-secondary {
+  flex: 0 0 auto;
+  min-width: 100px;
+}
+
+/* Button Primary with Icon */
+.button-primary {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--accent-color);
+  color: var(--bg-card);
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.button-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+.button-primary:disabled {
+  background-color: var(--border-light);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+/* Desktop adjustments for USDA modal */
+@media (min-width: 641px) {
+  .usda-import-overlay {
+    padding: 2rem;
+  }
+
+  .usda-import-modal {
+    max-height: 80vh;
+  }
+}

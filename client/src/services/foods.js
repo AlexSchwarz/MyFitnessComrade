@@ -13,6 +13,7 @@ import {
   deleteDoc,
   query,
   orderBy,
+  where,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -142,4 +143,70 @@ export async function seedDefaultFoods(userId) {
     results.push(food);
   }
   return results;
+}
+
+/**
+ * Find a food by USDA fdcId
+ * @param {string} userId - User ID
+ * @param {string} fdcId - USDA FoodData Central ID
+ * @returns {Promise<object|null>} The food if found, null otherwise
+ */
+export async function findFoodByFdcId(userId, fdcId) {
+  try {
+    const foodsQuery = query(
+      collection(db, 'users', userId, 'foods'),
+      where('fdcId', '==', fdcId)
+    );
+
+    const querySnapshot = await getDocs(foodsQuery);
+
+    if (querySnapshot.empty) {
+      return null;
+    }
+
+    const doc = querySnapshot.docs[0];
+    return { id: doc.id, ...doc.data() };
+  } catch (error) {
+    console.error('Error finding food by fdcId:', error);
+    throw error;
+  }
+}
+
+/**
+ * Import a food from USDA
+ * @param {string} userId - User ID
+ * @param {object} usdaFood - USDA food data
+ * @param {string} usdaFood.fdcId - USDA FoodData Central ID
+ * @param {string} usdaFood.name - Food name/description
+ * @param {number} usdaFood.caloriesPer100g - Calories per 100g
+ * @param {string} usdaFood.dataType - USDA data type (Foundation, Branded, etc.)
+ * @param {string|null} usdaFood.brandOwner - Brand owner (for branded foods)
+ * @returns {Promise<object>} The imported food document
+ */
+export async function importUSDAFood(userId, usdaFood) {
+  try {
+    // Check for existing import
+    const existing = await findFoodByFdcId(userId, usdaFood.fdcId);
+    if (existing) {
+      return { ...existing, alreadyExists: true };
+    }
+
+    const foodData = {
+      name: usdaFood.name.trim(),
+      caloriesPer100g: Number(usdaFood.caloriesPer100g),
+      source: 'usda',
+      fdcId: usdaFood.fdcId,
+      dataType: usdaFood.dataType || null,
+      brandOwner: usdaFood.brandOwner || null,
+      importedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const docRef = await addDoc(collection(db, 'users', userId, 'foods'), foodData);
+    return { id: docRef.id, ...foodData };
+  } catch (error) {
+    console.error('Error importing USDA food:', error);
+    throw error;
+  }
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import './App.css'
 import { signIn, signUp, logout, subscribeToAuthChanges } from './services/firebase'
 import { getUserGoal, setUserGoal, addEntry, getTodaysEntries, updateEntry, deleteEntry, deleteEntriesForDate } from './services/calories'
-import { getUserFoods, addFood, updateFood, deleteFood, calculateCalories, seedDefaultFoods } from './services/foods'
+import { getUserFoods, addFood, updateFood, deleteFood, calculateCalories, seedDefaultFoods, importUSDAFood, findFoodByFdcId } from './services/foods'
 import { addWeightEntry, getWeightEntries, updateWeightEntry, deleteWeightEntry } from './services/weights'
 import { getDailySummaries, calculateStreak, hasDailySummaries, backfillDailySummaries } from './services/dailySummary'
 import Navigation from './components/Navigation'
@@ -67,6 +67,9 @@ function App() {
   const [dailySummaries, setDailySummaries] = useState([])
   const [selectedStatsDays, setSelectedStatsDays] = useState(7)
   const [statsLoading, setStatsLoading] = useState(false)
+
+  // USDA import state
+  const [usdaImportLoading, setUsdaImportLoading] = useState(false)
 
   // Derived streak calculation
   const currentStreak = useMemo(() => {
@@ -551,6 +554,32 @@ function App() {
     }
   }
 
+  // USDA import functions
+  const handleUSDAImport = async (foodData) => {
+    try {
+      setUsdaImportLoading(true)
+      const importedFood = await importUSDAFood(user.uid, foodData)
+
+      if (importedFood.alreadyExists) {
+        // Food already exists, just return it
+        return importedFood
+      }
+
+      // Add to local state
+      setFoods([...foods, importedFood].sort((a, b) => a.name.localeCompare(b.name)))
+      return importedFood
+    } catch (error) {
+      console.error('Error importing USDA food:', error)
+      return null
+    } finally {
+      setUsdaImportLoading(false)
+    }
+  }
+
+  const findExistingUSDAFood = (fdcId) => {
+    return foods.find(f => f.fdcId === fdcId) || null
+  }
+
   const remainingCalories = dailyGoal - totalCalories
   const percentageConsumed = (totalCalories / dailyGoal) * 100
 
@@ -671,6 +700,9 @@ function App() {
             entries={entries}
             handleEditEntry={handleEditEntry}
             handleDeleteEntry={handleDeleteEntry}
+            onUSDAImport={handleUSDAImport}
+            usdaImportLoading={usdaImportLoading}
+            findExistingUSDAFood={findExistingUSDAFood}
           />
         )
       case 'stats':

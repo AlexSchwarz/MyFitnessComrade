@@ -9,6 +9,7 @@ MyFitnessComrade is a modern calorie tracking application that helps users manag
 - User authentication (email/password via Firebase Auth)
 - Set and edit daily calorie goals
 - Personal food library with calories per 100g
+- **Import foods from USDA FoodData Central database**
 - Log food entries with gram amounts (calories auto-calculated)
 - View today's entries with timestamps
 - Edit and delete entries
@@ -35,6 +36,7 @@ MyFitnessComrade is a modern calorie tracking application that helps users manag
 - Firebase Authentication (email/password)
 - Cloud Firestore (NoSQL database)
 - Client-side Firebase integration (no Express server)
+- Vercel Serverless Functions (USDA API proxy only)
 
 **Development:**
 - Node.js >= 18.0.0
@@ -51,7 +53,17 @@ The application runs entirely in the user's browser as a Single Page Application
 
 The React app uses the Firebase JavaScript SDK to communicate over HTTPS directly with Firebase's cloud services. **Firebase Authentication** handles user login with email/password, session management, and secure token generation. **Cloud Firestore** serves as the NoSQL database, storing user data in collections: `users/{userId}`, `foods/{foodId}`, `entries/{entryId}`, `weightEntries/{id}`, and `dailySummaries/{id}`.
 
-There is no Express server, no custom API endpoints, and no server-side code. All business logic runs in the browser, and all database operations go directly from the client to Firestore.
+There is no Express server and no traditional backend. All business logic runs in the browser, and all database operations go directly from the client to Firestore.
+
+### USDA Food Import (Serverless Proxy)
+
+The only exception to the client-only architecture is the **USDA FoodData Central integration**. Since the USDA API requires an API key that must remain confidential, this feature uses **Vercel Serverless Functions** as a thin proxy layer:
+
+- The browser calls `/api/usda-search` and `/api/usda-food` endpoints
+- These Vercel functions hold the USDA API key securely (never exposed to client)
+- Functions verify Firebase authentication before forwarding requests
+- Shared rate limiting via Firestore prevents exceeding USDA's 1,000 requests/hour limit
+- All other app operations remain direct client-to-Firebase
 
 ### Why No Backend?
 
@@ -237,6 +249,11 @@ service cloud.firestore {
       allow create: if request.auth.uid == request.resource.data.userId;
       allow update: if request.auth.uid == resource.data.userId;
     }
+
+    // System documents (rate limiting for USDA API) - server-side only via Admin SDK
+    match /system/{document} {
+      allow read, write: if false; // Only accessible via Firebase Admin SDK
+    }
   }
 }
 ```
@@ -406,6 +423,12 @@ VITE_FIREBASE_PROD_PROJECT_ID=...
 VITE_FIREBASE_PROD_STORAGE_BUCKET=...
 VITE_FIREBASE_PROD_MESSAGING_SENDER_ID=...
 VITE_FIREBASE_PROD_APP_ID=...
+
+# USDA FoodData Central API (for food import feature)
+USDA_API_KEY=...
+
+# Firebase Admin SDK (for serverless function auth verification)
+FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account",...}
 ```
 
 4. **Vercel Build Process:**
