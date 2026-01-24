@@ -11,18 +11,28 @@ function CalorieStatsView({
   loading,
   onDeleteDayEntries,
 }) {
-  const { theme } = useTheme()
+  const { mode, accentColor } = useTheme()
   const threshold = dailyGoal * 1.05;
 
   // Theme-aware colors for charts
+  const getAccentColor = () => {
+    const accents = {
+      green: mode === 'dark' ? '#4ade80' : '#22c55e',
+      blue: '#3b82f6',
+      pink: '#ec4899',
+      purple: '#a855f7',
+    }
+    return accents[accentColor] || accents.green
+  }
+
   const colors = {
-    grid: theme === 'dark' ? '#333' : '#e0e0e0',
-    axis: theme === 'dark' ? '#888' : '#666',
-    tooltipBg: theme === 'dark' ? '#1a1a1a' : '#ffffff',
-    tooltipBorder: theme === 'dark' ? '#333' : '#e0e0e0',
-    tooltipText: theme === 'dark' ? '#fff' : '#1a1a1a',
-    accent: theme === 'dark' ? '#4ade80' : '#3b82f6',
-    error: theme === 'dark' ? '#ef4444' : '#dc2626',
+    grid: mode === 'dark' ? '#333' : '#e0e0e0',
+    axis: mode === 'dark' ? '#888' : '#666',
+    tooltipBg: mode === 'dark' ? '#1a1a1a' : '#ffffff',
+    tooltipBorder: mode === 'dark' ? '#333' : '#e0e0e0',
+    tooltipText: mode === 'dark' ? '#fff' : '#1a1a1a',
+    accent: getAccentColor(),
+    error: mode === 'dark' ? '#ef4444' : '#dc2626',
   };
 
   // Filter to selected range and format for chart

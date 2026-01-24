@@ -22,14 +22,14 @@ MyFitnessComrade is a modern calorie tracking application that helps users manag
 - Mobile-first responsive design
 - Bottom navigation bar on mobile devices
 - Top sticky navigation on desktop
-- Dark theme optimized for all screen sizes
+- Customizable theme with dark/light mode toggle and accent color selection (green, blue, pink, purple)
 
 ## Tech Stack
 
 **Frontend:**
 - React 19 with Vite
 - Firebase SDK 12.7.0 (client-side integration)
-- Modern CSS with dark theme
+- Modern CSS with customizable themes (dark/light modes, 4 accent colors)
 - Responsive design
 
 **Backend/Database:**
@@ -297,6 +297,9 @@ The app runs at http://localhost:5173 (or 5174, 5175 if ports are in use)
    - Placeholder for future weight tracking feature
 5. **Account Tab:**
    - View logged-in user email
+   - Edit daily calorie goal
+   - Theme settings: toggle between dark/light mode
+   - Accent color selection: green, blue, pink, or purple
    - Logout button
 6. **Persistence:** All data saved to Firestore, loads on page refresh
 
@@ -573,22 +576,17 @@ npm run lint
 - No sign-up UI (users created manually in Firebase Console)
 - No historical data / past days view
 - No macros tracking (protein, carbs, fats)
-- No food database / search integration
 - Single timezone (UTC for date calculations)
-- Weight tracking tab is a placeholder (not yet implemented)
 
 ## Future Enhancements
 
 Potential features to consider:
 - Sign-up form for new users
-- Weight tracking functionality (tab exists as placeholder)
 - Historical calorie data (calendar view)
 - Weekly/monthly analytics and trends
 - Macros tracking (protein, carbs, fats)
-- Food database integration (USDA, etc.)
 - Photo uploads for meals
 - Export data to CSV
-- Light theme option
 - Mobile app (React Native)
 
 ## License

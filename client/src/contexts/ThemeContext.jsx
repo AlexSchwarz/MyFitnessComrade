@@ -2,23 +2,36 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 const ThemeContext = createContext()
 
+export const ACCENT_COLORS = [
+  { value: 'green', label: 'Green' },
+  { value: 'blue', label: 'Blue' },
+  { value: 'pink', label: 'Pink' },
+  { value: 'purple', label: 'Purple' }
+]
+
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('theme')
+  const [mode, setMode] = useState(() => {
+    const saved = localStorage.getItem('theme-mode')
     return saved || 'dark'
   })
 
-  useEffect(() => {
-    localStorage.setItem('theme', theme)
-    document.documentElement.setAttribute('data-theme', theme)
-  }, [theme])
+  const [accentColor, setAccentColor] = useState(() => {
+    const saved = localStorage.getItem('theme-accent')
+    return saved || 'green'
+  })
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark')
+  useEffect(() => {
+    localStorage.setItem('theme-mode', mode)
+    localStorage.setItem('theme-accent', accentColor)
+    document.documentElement.setAttribute('data-theme', `${mode}-${accentColor}`)
+  }, [mode, accentColor])
+
+  const toggleMode = () => {
+    setMode(prev => prev === 'dark' ? 'light' : 'dark')
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ mode, accentColor, toggleMode, setAccentColor }}>
       {children}
     </ThemeContext.Provider>
   )

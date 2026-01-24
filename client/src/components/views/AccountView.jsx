@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Pencil, Sun, Moon } from 'lucide-react'
-import { useTheme } from '../../contexts/ThemeContext'
+import { Pencil } from 'lucide-react'
+import { useTheme, ACCENT_COLORS } from '../../contexts/ThemeContext'
 
 function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSaveGoal }) {
-  const { theme, toggleTheme } = useTheme()
+  const { mode, accentColor, toggleMode, setAccentColor } = useTheme()
   const [seeding, setSeeding] = useState(false)
   const [seedSuccess, setSeedSuccess] = useState(false)
   const [isEditingGoal, setIsEditingGoal] = useState(false)
@@ -98,14 +98,31 @@ function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSa
           </div>
           <div className="theme-toggle-field">
             <div className="theme-toggle-label">
-              <span>Appearance</span>
-              <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+              <span>Mode</span>
+              <span>{mode === 'dark' ? 'Dark' : 'Light'}</span>
             </div>
             <button
-              onClick={toggleTheme}
-              className={`theme-toggle-switch ${theme === 'light' ? 'active' : ''}`}
-              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              onClick={toggleMode}
+              className={`theme-toggle-switch ${mode === 'light' ? 'active' : ''}`}
+              aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
             />
+          </div>
+          <div className="theme-toggle-field">
+            <div className="theme-toggle-label">
+              <span>Accent Color</span>
+            </div>
+            <select
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
+              className="theme-select"
+              aria-label="Select accent color"
+            >
+              {ACCENT_COLORS.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <button onClick={onLogout} className="btn btn-danger btn-block">
