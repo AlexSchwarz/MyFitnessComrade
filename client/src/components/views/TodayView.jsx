@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, X } from 'lucide-react'
 import FoodPicker from '../FoodPicker'
 import USDAImportModal from '../USDAImportModal'
 
@@ -137,11 +137,12 @@ function TodayView({
                   </div>
                   <button
                     type="button"
-                    className="button-change"
-                    onClick={() => setIsPickerOpen(true)}
+                    className="btn btn-icon"
+                    onClick={() => setSelectedFoodId('')}
                     disabled={entryLoading}
+                    aria-label="Clear food selection"
                   >
-                    Change
+                    <X size={18} />
                   </button>
                 </div>
               ) : (

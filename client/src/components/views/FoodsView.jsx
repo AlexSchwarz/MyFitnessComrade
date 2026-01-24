@@ -69,7 +69,7 @@ function FoodsView({
                 <button
                   type="button"
                   onClick={handleOpenUSDASearch}
-                  className="btn btn-secondary"
+                  className="btn btn-secondary btn-sm"
                   disabled={foodLoading}
                 >
                   <Database size={16} />
@@ -80,12 +80,12 @@ function FoodsView({
                 <button
                   type="button"
                   onClick={handleCancelFoodForm}
-                  className="btn btn-outline"
+                  className="btn btn-outline btn-sm"
                   disabled={foodLoading}
                 >
                   Cancel
                 </button>
-                <button type="submit" disabled={foodLoading} className="btn btn-primary">
+                <button type="submit" disabled={foodLoading} className="btn btn-primary btn-sm">
                   {foodLoading ? 'Saving...' : editingFoodId ? 'Update' : 'Add Food'}
                 </button>
               </div>
@@ -97,9 +97,9 @@ function FoodsView({
       {/* Foods List */}
       <div className="card">
         <div className="card-header-row">
-          <h2>My Foods</h2>
+          <h2>Registered Foods</h2>
           {!showFoodForm && (
-            <button onClick={handleShowFoodForm} className="button-add">
+            <button onClick={handleShowFoodForm} className="btn btn-primary btn-sm">
               + Add
             </button>
           )}
