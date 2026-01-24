@@ -15,7 +15,10 @@ function Navigation({ currentTab, onTabChange }) {
           key={id}
           type="button"
           className={`nav-tab ${currentTab === id ? "nav-tab-active" : ""}`}
-          onClick={() => onTabChange(id)}
+          onClick={(e) => {
+            e.currentTarget.blur();
+            onTabChange(id);
+          }}
         >
           <Icon className="nav-icon" aria-hidden="true" />
           <span className="nav-label">{label}</span>
