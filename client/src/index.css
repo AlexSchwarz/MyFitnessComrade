@@ -21,8 +21,10 @@
   --text-muted: #666;
   --accent-color: #4ade80;
   --accent-hover: #22c55e;
+  --accent-light: #a7f3d0;
   --accent-bg: rgba(74, 222, 128, 0.1);
   --accent-border: rgba(74, 222, 128, 0.3);
+  --accent-glow: rgba(74, 222, 128, 0.4);
   --error-color: #ef4444;
   --error-bg: rgba(239, 68, 68, 0.1);
   --error-border: rgba(239, 68, 68, 0.3);
@@ -50,8 +52,10 @@
   --text-muted: #999;
   --accent-color: #3b82f6;
   --accent-hover: #2563eb;
+  --accent-light: #93c5fd;
   --accent-bg: rgba(59, 130, 246, 0.1);
   --accent-border: rgba(59, 130, 246, 0.3);
+  --accent-glow: rgba(59, 130, 246, 0.4);
   --error-color: #dc2626;
   --error-bg: rgba(220, 38, 38, 0.1);
   --error-border: rgba(220, 38, 38, 0.3);

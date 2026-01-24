@@ -108,7 +108,10 @@ function TodayView({
         <div className="progress-bar">
           <div
             className="progress-fill"
-            style={{ width: `${Math.min(percentageConsumed, 100)}%` }}
+            style={{
+              width: `${Math.min(percentageConsumed, 100)}%`,
+              '--progress': Math.min(percentageConsumed, 100) / 100
+            }}
           ></div>
         </div>
       </div>
