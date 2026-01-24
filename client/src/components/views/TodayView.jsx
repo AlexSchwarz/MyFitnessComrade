@@ -110,11 +110,13 @@ function TodayView({
           </div>
         )}
         {lessNumbersMode && (
-          <span className="progress-label">Today's Calories</span>
+          <span className="progress-label">
+            {percentageConsumed >= 100 ? 'Goal Reached' : "Today's Calories"}
+          </span>
         )}
         <div className={`progress-bar ${lessNumbersMode ? 'progress-bar-large' : ''}`}>
           <div
-            className="progress-fill"
+            className={`progress-fill ${lessNumbersMode && percentageConsumed >= 100 ? 'progress-fill-solid' : ''}`}
             style={{
               width: `${Math.min(percentageConsumed, 100)}%`,
               '--progress': Math.min(percentageConsumed, 100) / 100

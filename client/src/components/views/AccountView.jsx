@@ -98,13 +98,13 @@ function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSa
           </div>
           <div className="theme-toggle-field">
             <div className="theme-toggle-label">
-              <span>Mode</span>
-              <span>{mode === 'dark' ? 'Dark' : 'Light'}</span>
+              <span>Dark</span>
+              <span className="setting-description">Dark mode theme</span>
             </div>
             <button
               onClick={toggleMode}
-              className={`theme-toggle-switch ${mode === 'light' ? 'active' : ''}`}
-              aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
+              className={`theme-toggle-switch ${mode === 'dark' ? 'active' : ''}`}
+              aria-label={`${mode === 'dark' ? 'Disable' : 'Enable'} dark mode`}
             />
           </div>
           <div className="theme-toggle-field">
