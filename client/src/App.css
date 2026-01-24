@@ -1018,6 +1018,9 @@
   cursor: pointer;
   transition: all 0.2s;
   flex: 1;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .nav-tab:hover {
