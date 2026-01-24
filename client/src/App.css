@@ -1029,13 +1029,18 @@
 }
 
 .nav-tab:focus,
-.nav-tab:active {
+.nav-tab:active,
+.nav-tab:focus-visible {
   outline: none;
+  background-color: var(--accent-bg);
+  color: var(--accent-color);
 }
 
 .nav-tab-active,
+.nav-tab-active:hover,
 .nav-tab-active:focus,
-.nav-tab-active:active {
+.nav-tab-active:active,
+.nav-tab-active:focus-visible {
   background-color: var(--accent-bg);
   color: var(--accent-color);
 }
