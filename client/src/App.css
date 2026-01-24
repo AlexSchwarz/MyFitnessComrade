@@ -1025,12 +1025,14 @@
   color: var(--text-primary);
 }
 
-.nav-tab:focus {
+.nav-tab:focus,
+.nav-tab:active {
   outline: none;
 }
 
 .nav-tab-active,
-.nav-tab-active:focus {
+.nav-tab-active:focus,
+.nav-tab-active:active {
   background-color: var(--accent-bg);
   color: var(--accent-color);
 }
