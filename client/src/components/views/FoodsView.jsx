@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Pencil, Trash2, Database } from 'lucide-react'
 import FoodPicker from '../FoodPicker'
+import { useTheme } from '../../contexts/ThemeContext'
 
 function FoodsView({
   foods,
@@ -18,6 +19,7 @@ function FoodsView({
   handleSaveFood,
   handleDeleteFood,
 }) {
+  const { lessNumbersMode } = useTheme()
   const [isPickerOpen, setIsPickerOpen] = useState(false)
 
   const handleUSDASelect = (usdaFood) => {
@@ -116,7 +118,9 @@ function FoodsView({
               <div key={food.id} className="food-card">
                 <span className="food-name">{food.name}</span>
                 <div className="food-details">
-                  <span className="food-calories">{food.caloriesPer100g} cal/100g</span>
+                  {!lessNumbersMode && (
+                    <span className="food-calories">{food.caloriesPer100g} cal/100g</span>
+                  )}
                   <div className="food-actions">
                     <button
                       onClick={() => handleEditFood(food)}

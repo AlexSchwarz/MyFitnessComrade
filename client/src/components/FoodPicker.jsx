@@ -5,7 +5,7 @@ import { searchUSDAFoods } from '../services/usda'
 // Debounce delay for USDA search
 const USDA_DEBOUNCE_MS = 400
 
-function FoodPicker({ foods, isOpen, onClose, onSelect, onUSDASelect, defaultSource = 'my-foods', usdaOnly = false }) {
+function FoodPicker({ foods, isOpen, onClose, onSelect, onUSDASelect, defaultSource = 'my-foods', usdaOnly = false, lessNumbersMode = false }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [source, setSource] = useState(defaultSource) // 'my-foods' or 'usda'
 
@@ -179,7 +179,9 @@ function FoodPicker({ foods, isOpen, onClose, onSelect, onUSDASelect, defaultSou
                   onClick={() => handleSelect(food)}
                 >
                   <span className="food-picker-item-name">{food.name}</span>
-                  <span className="food-picker-item-calories">{food.caloriesPer100g} cal/100g</span>
+                  {!lessNumbersMode && (
+                    <span className="food-picker-item-calories">{food.caloriesPer100g} cal/100g</span>
+                  )}
                 </button>
               ))
             )
@@ -213,8 +215,9 @@ function FoodPicker({ foods, isOpen, onClose, onSelect, onUSDASelect, defaultSou
                   <div className="food-picker-item-main">
                     <span className="food-picker-item-name">{food.description}</span>
                     <span className="food-picker-item-meta">
-                      {food.caloriesPer100g !== null ? `${food.caloriesPer100g} cal/100g` : 'No calorie data'}
-                      {food.brandOwner && ` • ${food.brandOwner}`}
+                      {!lessNumbersMode && (food.caloriesPer100g !== null ? `${food.caloriesPer100g} cal/100g` : 'No calorie data')}
+                      {!lessNumbersMode && food.brandOwner && ' • '}
+                      {food.brandOwner && food.brandOwner}
                     </span>
                   </div>
                 </button>

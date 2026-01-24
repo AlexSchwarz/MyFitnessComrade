@@ -20,18 +20,28 @@ export function ThemeProvider({ children }) {
     return saved || 'green'
   })
 
+  const [lessNumbersMode, setLessNumbersMode] = useState(() => {
+    const saved = localStorage.getItem('less-numbers-mode')
+    return saved === 'true'
+  })
+
   useEffect(() => {
     localStorage.setItem('theme-mode', mode)
     localStorage.setItem('theme-accent', accentColor)
+    localStorage.setItem('less-numbers-mode', lessNumbersMode.toString())
     document.documentElement.setAttribute('data-theme', `${mode}-${accentColor}`)
-  }, [mode, accentColor])
+  }, [mode, accentColor, lessNumbersMode])
 
   const toggleMode = () => {
     setMode(prev => prev === 'dark' ? 'light' : 'dark')
   }
 
+  const toggleLessNumbersMode = () => {
+    setLessNumbersMode(prev => !prev)
+  }
+
   return (
-    <ThemeContext.Provider value={{ mode, accentColor, toggleMode, setAccentColor }}>
+    <ThemeContext.Provider value={{ mode, accentColor, toggleMode, setAccentColor, lessNumbersMode, toggleLessNumbersMode }}>
       {children}
     </ThemeContext.Provider>
   )

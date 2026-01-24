@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Pencil, Trash2, X } from 'lucide-react'
 import FoodPicker from '../FoodPicker'
 import USDAImportModal from '../USDAImportModal'
+import { useTheme } from '../../contexts/ThemeContext'
 
 function TodayView({
   // Summary props
@@ -39,6 +40,7 @@ function TodayView({
   usdaImportLoading,
   findExistingUSDAFood,
 }) {
+  const { lessNumbersMode } = useTheme()
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [usdaImportFood, setUsdaImportFood] = useState(null)
   const [existingUSDAFood, setExistingUSDAFood] = useState(null)
@@ -88,24 +90,29 @@ function TodayView({
   return (
     <>
       {/* Calorie Summary */}
-      <div className="card summary-card">
-        <div className="summary-stats">
-          <div className="stat">
-            <span className="stat-label">Consumed</span>
-            <span className="stat-value">{totalCalories}</span>
+      <div className={`card summary-card ${lessNumbersMode ? 'less-numbers' : ''}`}>
+        {!lessNumbersMode && (
+          <div className="summary-stats">
+            <div className="stat">
+              <span className="stat-label">Consumed</span>
+              <span className="stat-value">{totalCalories}</span>
+            </div>
+            <div className="stat">
+              <span className="stat-label">Goal</span>
+              <span className="stat-value">{dailyGoal}</span>
+            </div>
+            <div className="stat">
+              <span className="stat-label">Remaining</span>
+              <span className={`stat-value ${remainingCalories < 0 ? 'over-goal' : remainingCalories < dailyGoal * 0.2 ? 'near-goal' : 'under-goal'}`}>
+                {remainingCalories}
+              </span>
+            </div>
           </div>
-          <div className="stat">
-            <span className="stat-label">Goal</span>
-            <span className="stat-value">{dailyGoal}</span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">Remaining</span>
-            <span className={`stat-value ${remainingCalories < 0 ? 'over-goal' : remainingCalories < dailyGoal * 0.2 ? 'near-goal' : 'under-goal'}`}>
-              {remainingCalories}
-            </span>
-          </div>
-        </div>
-        <div className="progress-bar">
+        )}
+        {lessNumbersMode && (
+          <span className="progress-label">Today's Calories</span>
+        )}
+        <div className={`progress-bar ${lessNumbersMode ? 'progress-bar-large' : ''}`}>
           <div
             className="progress-fill"
             style={{
@@ -136,7 +143,9 @@ function TodayView({
                 <div className="selected-food-summary">
                   <div className="selected-food-info">
                     <span className="selected-food-name">{selectedFood.name}</span>
-                    <span className="selected-food-calories">{selectedFood.caloriesPer100g} cal/100g</span>
+                    {!lessNumbersMode && (
+                      <span className="selected-food-calories">{selectedFood.caloriesPer100g} cal/100g</span>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -263,7 +272,7 @@ function TodayView({
                 className="input"
               />
 
-              {calculatedCalories > 0 && (
+              {calculatedCalories > 0 && !lessNumbersMode && (
                 <div className="calculated-calories">
                   <span className="calories-label">Calories:</span>
                   <span className="calories-value">{calculatedCalories} cal</span>
@@ -317,7 +326,9 @@ function TodayView({
                 </span>
                 <div className="entry-details">
                   <div className="entry-meta">
-                    <span className="entry-calories">{entry.calories} cal</span>
+                    {!lessNumbersMode && (
+                      <span className="entry-calories">{entry.calories} cal</span>
+                    )}
                     <span className="entry-time">
                       {new Date(entry.entryTime).toLocaleTimeString('en-US', {
                         hour: 'numeric',
@@ -354,6 +365,7 @@ function TodayView({
         onClose={() => setIsPickerOpen(false)}
         onSelect={handleFoodSelect}
         onUSDASelect={handleUSDASelect}
+        lessNumbersMode={lessNumbersMode}
       />
 
       <USDAImportModal

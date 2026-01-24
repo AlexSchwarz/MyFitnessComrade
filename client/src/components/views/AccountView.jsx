@@ -3,7 +3,7 @@ import { Pencil } from 'lucide-react'
 import { useTheme, ACCENT_COLORS } from '../../contexts/ThemeContext'
 
 function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSaveGoal }) {
-  const { mode, accentColor, toggleMode, setAccentColor } = useTheme()
+  const { mode, accentColor, toggleMode, setAccentColor, lessNumbersMode, toggleLessNumbersMode } = useTheme()
   const [seeding, setSeeding] = useState(false)
   const [seedSuccess, setSeedSuccess] = useState(false)
   const [isEditingGoal, setIsEditingGoal] = useState(false)
@@ -109,7 +109,8 @@ function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSa
           </div>
           <div className="theme-toggle-field">
             <div className="theme-toggle-label">
-              <span>Accent Color</span>
+              <span>Color</span>
+              <span className="setting-description">App accent color</span>
             </div>
             <select
               value={accentColor}
@@ -123,6 +124,17 @@ function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSa
                 </option>
               ))}
             </select>
+          </div>
+          <div className="theme-toggle-field">
+            <div className="theme-toggle-label">
+              <span>Less Numbers</span>
+              <span className="setting-description">Hide calorie numbers</span>
+            </div>
+            <button
+              onClick={toggleLessNumbersMode}
+              className={`theme-toggle-switch ${lessNumbersMode ? 'active' : ''}`}
+              aria-label={`${lessNumbersMode ? 'Disable' : 'Enable'} less numbers mode`}
+            />
           </div>
         </div>
         <button onClick={onLogout} className="btn btn-danger btn-block">
