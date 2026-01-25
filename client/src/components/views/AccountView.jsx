@@ -137,6 +137,30 @@ function AccountView({ userEmail, userId, onLogout, onSeedFoods, dailyGoal, onSa
             />
           </div>
         </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="card">
+        <h2>FAQ</h2>
+        <div className="faq-list">
+          <div className="faq-item">
+            <h3 className="faq-question">When does a new day start?</h3>
+            <p className="faq-answer">
+              The calorie tracking day resets at 3:00 AM (Switzerland time).
+              Entries logged before 3 AM count towards the previous day.
+            </p>
+          </div>
+          <div className="faq-item">
+            <h3 className="faq-question">How do I reset my password?</h3>
+            <p className="faq-answer">
+              To reset your password, please message Alex.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Logout */}
+      <div className="card">
         <button onClick={onLogout} className="btn btn-danger btn-block">
           Logout
         </button>
