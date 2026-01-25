@@ -612,6 +612,26 @@
   cursor: not-allowed;
 }
 
+/* Search Input */
+.search-input-wrapper {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.search-input-wrapper .search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-input-wrapper .search-input {
+  padding-left: 2.5rem;
+  margin-bottom: 0;
+}
+
 /* Foods List */
 .foods-list {
   display: flex;

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Pencil, Trash2, Database } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Pencil, Trash2, Database, Search } from 'lucide-react'
 import FoodPicker from '../FoodPicker'
 import { useTheme } from '../../contexts/ThemeContext'
 import { getFoodCalorieLabel } from '../../services/foods'
@@ -26,6 +26,14 @@ function FoodsView({
 }) {
   const { lessNumbersMode } = useTheme()
   const [isPickerOpen, setIsPickerOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  // Filter foods based on search query
+  const filteredFoods = useMemo(() => {
+    if (!searchQuery.trim()) return foods
+    const query = searchQuery.toLowerCase()
+    return foods.filter(food => food.name.toLowerCase().includes(query))
+  }, [foods, searchQuery])
 
   const handleUSDASelect = (usdaFood) => {
     // Pre-fill form with USDA data
@@ -152,8 +160,24 @@ function FoodsView({
             <p className="empty-state-hint">Add your first food to start tracking!</p>
           </div>
         ) : (
-          <div className="foods-list">
-            {foods.map(food => (
+          <>
+            <div className="search-input-wrapper">
+              <Search size={18} className="search-icon" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search foods..."
+                className="input search-input"
+              />
+            </div>
+            {filteredFoods.length === 0 ? (
+              <div className="empty-state">
+                <p>No foods match "{searchQuery}"</p>
+              </div>
+            ) : (
+              <div className="foods-list">
+                {filteredFoods.map(food => (
               <div key={food.id} className="food-card">
                 <span className="food-name">{food.name}</span>
                 <div className="food-details">
@@ -178,8 +202,10 @@ function FoodsView({
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
