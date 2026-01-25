@@ -3,6 +3,7 @@ import { Pencil, Trash2, X } from 'lucide-react'
 import FoodPicker from '../FoodPicker'
 import USDAImportModal from '../USDAImportModal'
 import { useTheme } from '../../contexts/ThemeContext'
+import { getFoodCalorieMode, getFoodCalorieLabel } from '../../services/foods'
 
 function TodayView({
   // Summary props
@@ -16,6 +17,8 @@ function TodayView({
   setSelectedFoodId,
   grams,
   setGrams,
+  quantity,
+  setQuantity,
   calculatedCalories,
   entryError,
   entryLoading,
@@ -81,10 +84,11 @@ function TodayView({
   }
 
   // Determine if submit should be disabled
+  const isItemMode = selectedFood && getFoodCalorieMode(selectedFood) === 'perItem'
   const isSubmitDisabled = entryLoading || (
     isCustomMode
       ? (!customName.trim() || !customCalories)
-      : (!selectedFoodId || !grams)
+      : (!selectedFoodId || (isItemMode ? !quantity : !grams))
   )
 
   return (
@@ -146,7 +150,7 @@ function TodayView({
                   <div className="selected-food-info">
                     <span className="selected-food-name">{selectedFood.name}</span>
                     {!lessNumbersMode && (
-                      <span className="selected-food-calories">{selectedFood.caloriesPer100g} cal/100g</span>
+                      <span className="selected-food-calories">{getFoodCalorieLabel(selectedFood)}</span>
                     )}
                   </div>
                   <button
@@ -228,51 +232,104 @@ function TodayView({
             </>
           ) : (
             <>
-              {/* Food-based entry: grams input */}
-              <div className="grams-quick-add">
-                <button
-                  type="button"
-                  className="quick-add-btn"
-                  onClick={() => setGrams(String((parseFloat(grams) || 0) + 100))}
-                  disabled={entryLoading || !selectedFoodId}
-                >
-                  +100
-                </button>
-                <button
-                  type="button"
-                  className="quick-add-btn"
-                  onClick={() => setGrams(String((parseFloat(grams) || 0) + 50))}
-                  disabled={entryLoading || !selectedFoodId}
-                >
-                  +50
-                </button>
-                <button
-                  type="button"
-                  className="quick-add-btn"
-                  onClick={() => setGrams(String((parseFloat(grams) || 0) + 10))}
-                  disabled={entryLoading || !selectedFoodId}
-                >
-                  +10
-                </button>
-                <button
-                  type="button"
-                  className="quick-add-btn quick-add-btn-clear"
-                  onClick={() => setGrams('')}
-                  disabled={entryLoading || !grams}
-                >
-                  Clear
-                </button>
-              </div>
+              {/* Food-based entry: quantity input (grams or items based on food mode) */}
+              {selectedFood && getFoodCalorieMode(selectedFood) === 'perItem' ? (
+                <>
+                  {/* Item mode: quick-add buttons for items */}
+                  <div className="grams-quick-add">
+                    <button
+                      type="button"
+                      className="quick-add-btn"
+                      onClick={() => setQuantity(String((parseFloat(quantity) || 0) + 5))}
+                      disabled={entryLoading || !selectedFoodId}
+                    >
+                      +5
+                    </button>
+                    <button
+                      type="button"
+                      className="quick-add-btn"
+                      onClick={() => setQuantity(String((parseFloat(quantity) || 0) + 1))}
+                      disabled={entryLoading || !selectedFoodId}
+                    >
+                      +1
+                    </button>
+                    <button
+                      type="button"
+                      className="quick-add-btn"
+                      onClick={() => setQuantity(String((parseFloat(quantity) || 0) + 0.5))}
+                      disabled={entryLoading || !selectedFoodId}
+                    >
+                      +0.5
+                    </button>
+                    <button
+                      type="button"
+                      className="quick-add-btn quick-add-btn-clear"
+                      onClick={() => setQuantity('')}
+                      disabled={entryLoading || !quantity}
+                    >
+                      Clear
+                    </button>
+                  </div>
 
-              <input
-                type="number"
-                step="0.1"
-                value={grams}
-                onChange={(e) => setGrams(e.target.value)}
-                placeholder="Amount in grams"
-                disabled={entryLoading || !selectedFoodId}
-                className="input"
-              />
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    placeholder="Number of items"
+                    disabled={entryLoading || !selectedFoodId}
+                    className="input"
+                  />
+                </>
+              ) : (
+                <>
+                  {/* Gram mode: quick-add buttons for grams */}
+                  <div className="grams-quick-add">
+                    <button
+                      type="button"
+                      className="quick-add-btn"
+                      onClick={() => setGrams(String((parseFloat(grams) || 0) + 100))}
+                      disabled={entryLoading || !selectedFoodId}
+                    >
+                      +100
+                    </button>
+                    <button
+                      type="button"
+                      className="quick-add-btn"
+                      onClick={() => setGrams(String((parseFloat(grams) || 0) + 50))}
+                      disabled={entryLoading || !selectedFoodId}
+                    >
+                      +50
+                    </button>
+                    <button
+                      type="button"
+                      className="quick-add-btn"
+                      onClick={() => setGrams(String((parseFloat(grams) || 0) + 10))}
+                      disabled={entryLoading || !selectedFoodId}
+                    >
+                      +10
+                    </button>
+                    <button
+                      type="button"
+                      className="quick-add-btn quick-add-btn-clear"
+                      onClick={() => setGrams('')}
+                      disabled={entryLoading || !grams}
+                    >
+                      Clear
+                    </button>
+                  </div>
+
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={grams}
+                    onChange={(e) => setGrams(e.target.value)}
+                    placeholder="Amount in grams"
+                    disabled={entryLoading || !selectedFoodId}
+                    className="input"
+                  />
+                </>
+              )}
 
               {calculatedCalories > 0 && !lessNumbersMode && (
                 <div className="calculated-calories">
@@ -324,7 +381,11 @@ function TodayView({
               <div key={entry.id} className="entry-card">
                 <span className="entry-name">
                   {entry.foodName}
-                  {entry.grams && <span className="entry-grams"> ({entry.grams}g)</span>}
+                  {entry.quantityUnit === 'item' ? (
+                    <span className="entry-grams"> ({entry.quantity} {entry.quantity === 1 ? 'item' : 'items'})</span>
+                  ) : entry.grams ? (
+                    <span className="entry-grams"> ({entry.grams}g)</span>
+                  ) : null}
                 </span>
                 <div className="entry-details">
                   <div className="entry-meta">

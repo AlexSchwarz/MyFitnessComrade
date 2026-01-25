@@ -15,6 +15,7 @@ import {
   limit,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { getLogicalToday, getDateDaysAgo } from './dateUtils';
 
 /**
  * Get daily summaries for last N days (efficient stats query)
@@ -23,9 +24,7 @@ import { db } from '../config/firebase';
  * @returns {Promise<Array<{date: string, totalCalories: number, entryCount: number}>>}
  */
 export async function getDailySummaries(userId, days = 30) {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  const startDateStr = startDate.toISOString().split('T')[0];
+  const startDateStr = getDateDaysAgo(days);
 
   const summariesQuery = query(
     collection(db, 'users', userId, 'dailySummaries'),
@@ -42,9 +41,7 @@ export async function getDailySummaries(userId, days = 30) {
   // Fill missing dates with 0
   const result = [];
   for (let i = days - 1; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = getDateDaysAgo(i);
     const existing = summaries.find(s => s.date === dateStr);
     result.push({
       date: dateStr,
@@ -143,7 +140,7 @@ export async function hasDailySummaries(userId) {
  */
 export function calculateStreak(dailySummaries, dailyGoal) {
   const threshold = dailyGoal * 1.05;
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLogicalToday();
 
   // Sort newest first, exclude today
   const sorted = [...dailySummaries]

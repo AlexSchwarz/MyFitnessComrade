@@ -17,6 +17,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { getLogicalToday } from './dateUtils';
 
 /**
  * Get user's daily calorie goal
@@ -55,12 +56,15 @@ export async function setUserGoal(userId, goal) {
  * @param {string} userId - User ID
  * @param {string|null} foodId - Food ID (null for custom entries)
  * @param {string} foodName - Food name or custom name for display
- * @param {number|null} grams - Amount in grams (null for custom entries)
+ * @param {number|null} grams - Amount in grams (null for custom entries) - DEPRECATED, use options.quantity
  * @param {number} calories - Pre-calculated or direct calories
+ * @param {object} options - Optional parameters for new entry format
+ * @param {number} options.quantity - Amount (in grams or items)
+ * @param {string} options.quantityUnit - 'g' or 'item'
  */
-export async function addEntry(userId, foodId, foodName, grams, calories) {
+export async function addEntry(userId, foodId, foodName, grams, calories, options = {}) {
   try {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const today = getLogicalToday();
     const entryData = {
       date: today,
       foodName,
@@ -69,10 +73,24 @@ export async function addEntry(userId, foodId, foodName, grams, calories) {
       createdAt: new Date().toISOString(),
     };
 
-    // Only include foodId and grams for food-based entries
+    // Only include foodId and quantity data for food-based entries
     if (foodId) {
       entryData.foodId = foodId;
-      entryData.grams = Number(grams);
+
+      // Use new quantity/quantityUnit format if provided, otherwise fall back to grams
+      if (options.quantity !== undefined && options.quantityUnit) {
+        entryData.quantity = Number(options.quantity);
+        entryData.quantityUnit = options.quantityUnit;
+        // Also store grams for backwards compatibility when unit is 'g'
+        if (options.quantityUnit === 'g') {
+          entryData.grams = Number(options.quantity);
+        }
+      } else if (grams !== null) {
+        // Legacy format: store both for backwards compatibility
+        entryData.grams = Number(grams);
+        entryData.quantity = Number(grams);
+        entryData.quantityUnit = 'g';
+      }
     }
 
     const docRef = await addDoc(collection(db, 'users', userId, 'entries'), entryData);
@@ -88,7 +106,7 @@ export async function addEntry(userId, foodId, foodName, grams, calories) {
  */
 export async function getTodaysEntries(userId) {
   try {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const today = getLogicalToday();
     const entriesQuery = query(
       collection(db, 'users', userId, 'entries'),
       where('date', '==', today)
@@ -114,10 +132,13 @@ export async function getTodaysEntries(userId) {
  * @param {string} entryId - Entry ID
  * @param {string|null} foodId - Food ID (null for custom entries)
  * @param {string} foodName - Food name or custom name
- * @param {number|null} grams - Amount in grams (null for custom entries)
+ * @param {number|null} grams - Amount in grams (null for custom entries) - DEPRECATED, use options.quantity
  * @param {number} calories - Pre-calculated or direct calories
+ * @param {object} options - Optional parameters for new entry format
+ * @param {number} options.quantity - Amount (in grams or items)
+ * @param {string} options.quantityUnit - 'g' or 'item'
  */
-export async function updateEntry(userId, entryId, foodId, foodName, grams, calories) {
+export async function updateEntry(userId, entryId, foodId, foodName, grams, calories, options = {}) {
   try {
     const updateData = {
       foodName,
@@ -125,15 +146,34 @@ export async function updateEntry(userId, entryId, foodId, foodName, grams, calo
       updatedAt: new Date().toISOString(),
     };
 
-    // For food-based entries, include foodId and grams
+    // For food-based entries, include foodId and quantity data
     // For custom entries, explicitly remove them using deleteField
     if (foodId) {
       updateData.foodId = foodId;
-      updateData.grams = Number(grams);
+
+      // Use new quantity/quantityUnit format if provided, otherwise fall back to grams
+      if (options.quantity !== undefined && options.quantityUnit) {
+        updateData.quantity = Number(options.quantity);
+        updateData.quantityUnit = options.quantityUnit;
+        // Also store grams for backwards compatibility when unit is 'g'
+        if (options.quantityUnit === 'g') {
+          updateData.grams = Number(options.quantity);
+        } else {
+          // Clear grams field when using item unit
+          updateData.grams = deleteField();
+        }
+      } else if (grams !== null) {
+        // Legacy format: store both for backwards compatibility
+        updateData.grams = Number(grams);
+        updateData.quantity = Number(grams);
+        updateData.quantityUnit = 'g';
+      }
     } else {
       // Remove food-specific fields when converting to custom entry
       updateData.foodId = deleteField();
       updateData.grams = deleteField();
+      updateData.quantity = deleteField();
+      updateData.quantityUnit = deleteField();
     }
 
     await updateDoc(doc(db, 'users', userId, 'entries', entryId), updateData);

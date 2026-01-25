@@ -61,16 +61,29 @@ export async function getFood(userId, foodId) {
  * Add a new food
  * @param {string} userId - User ID
  * @param {string} name - Food name
- * @param {number} caloriesPer100g - Calories per 100g
+ * @param {number} caloriesPer100g - Calories per 100g (for per100g mode)
+ * @param {object} options - Optional parameters
+ * @param {string} options.calorieMode - 'per100g' (default) or 'perItem'
+ * @param {number} options.caloriesPerItem - Calories per item (for perItem mode)
  */
-export async function addFood(userId, name, caloriesPer100g) {
+export async function addFood(userId, name, caloriesPer100g, options = {}) {
   try {
+    const { calorieMode = 'per100g', caloriesPerItem } = options;
+
     const foodData = {
       name: name.trim(),
-      caloriesPer100g: Number(caloriesPer100g),
+      calorieMode,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+
+    // Store the appropriate calorie field based on mode
+    if (calorieMode === 'perItem') {
+      foodData.caloriesPerItem = Number(caloriesPerItem);
+      // Also store caloriesPer100g as null/undefined for clarity
+    } else {
+      foodData.caloriesPer100g = Number(caloriesPer100g);
+    }
 
     const docRef = await addDoc(collection(db, 'users', userId, 'foods'), foodData);
     return { id: docRef.id, ...foodData };
@@ -85,15 +98,33 @@ export async function addFood(userId, name, caloriesPer100g) {
  * @param {string} userId - User ID
  * @param {string} foodId - Food ID
  * @param {string} name - Food name
- * @param {number} caloriesPer100g - Calories per 100g
+ * @param {number} caloriesPer100g - Calories per 100g (for per100g mode)
+ * @param {object} options - Optional parameters
+ * @param {string} options.calorieMode - 'per100g' (default) or 'perItem'
+ * @param {number} options.caloriesPerItem - Calories per item (for perItem mode)
  */
-export async function updateFood(userId, foodId, name, caloriesPer100g) {
+export async function updateFood(userId, foodId, name, caloriesPer100g, options = {}) {
   try {
-    await updateDoc(doc(db, 'users', userId, 'foods', foodId), {
+    const { calorieMode = 'per100g', caloriesPerItem } = options;
+
+    const updateData = {
       name: name.trim(),
-      caloriesPer100g: Number(caloriesPer100g),
+      calorieMode,
       updatedAt: new Date().toISOString(),
-    });
+    };
+
+    // Store the appropriate calorie field based on mode
+    if (calorieMode === 'perItem') {
+      updateData.caloriesPerItem = Number(caloriesPerItem);
+      // Clear the other field when switching modes
+      updateData.caloriesPer100g = null;
+    } else {
+      updateData.caloriesPer100g = Number(caloriesPer100g);
+      // Clear the other field when switching modes
+      updateData.caloriesPerItem = null;
+    }
+
+    await updateDoc(doc(db, 'users', userId, 'foods', foodId), updateData);
   } catch (error) {
     console.error('Error updating food:', error);
     throw error;
@@ -115,10 +146,52 @@ export async function deleteFood(userId, foodId) {
 }
 
 /**
- * Calculate calories for a given amount of grams
+ * Calculate calories for a given amount of grams (per100g mode)
  */
 export function calculateCalories(caloriesPer100g, grams) {
   return Math.round((grams / 100) * caloriesPer100g);
+}
+
+/**
+ * Calculate calories for a given number of items (perItem mode)
+ */
+export function calculateCaloriesPerItem(caloriesPerItem, items) {
+  return Math.round(caloriesPerItem * items);
+}
+
+/**
+ * Calculate calories based on food's calorie mode
+ * @param {object} food - Food object with calorieMode, caloriesPer100g, and/or caloriesPerItem
+ * @param {number} quantity - Amount (grams or items depending on mode)
+ * @returns {number} Calculated calories
+ */
+export function calculateCaloriesForFood(food, quantity) {
+  if (food.calorieMode === 'perItem') {
+    return calculateCaloriesPerItem(food.caloriesPerItem, quantity);
+  }
+  // Default to per100g mode (backwards compatibility)
+  return calculateCalories(food.caloriesPer100g, quantity);
+}
+
+/**
+ * Get the calorie mode for a food (with backwards compatibility)
+ * @param {object} food - Food object
+ * @returns {'per100g' | 'perItem'}
+ */
+export function getFoodCalorieMode(food) {
+  return food.calorieMode || 'per100g';
+}
+
+/**
+ * Get display label for a food's calorie rate
+ * @param {object} food - Food object
+ * @returns {string} e.g., "120 cal/100g" or "80 cal/item"
+ */
+export function getFoodCalorieLabel(food) {
+  if (food.calorieMode === 'perItem') {
+    return `${food.caloriesPerItem} cal/item`;
+  }
+  return `${food.caloriesPer100g} cal/100g`;
 }
 
 /**

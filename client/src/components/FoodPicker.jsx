@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Search, Database, User } from 'lucide-react'
 import { searchUSDAFoods } from '../services/usda'
+import { getFoodCalorieLabel } from '../services/foods'
 
 // Debounce delay for USDA search
 const USDA_DEBOUNCE_MS = 400
@@ -180,7 +181,7 @@ function FoodPicker({ foods, isOpen, onClose, onSelect, onUSDASelect, defaultSou
                 >
                   <span className="food-picker-item-name">{food.name}</span>
                   {!lessNumbersMode && (
-                    <span className="food-picker-item-calories">{food.caloriesPer100g} cal/100g</span>
+                    <span className="food-picker-item-calories">{getFoodCalorieLabel(food)}</span>
                   )}
                 </button>
               ))

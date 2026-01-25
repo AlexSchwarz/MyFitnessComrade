@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo } from 'react'
 import './App.css'
 import { signIn, signUp, logout, subscribeToAuthChanges } from './services/firebase'
 import { getUserGoal, setUserGoal, addEntry, getTodaysEntries, updateEntry, deleteEntry, deleteEntriesForDate } from './services/calories'
-import { getUserFoods, addFood, updateFood, deleteFood, calculateCalories, seedDefaultFoods, importUSDAFood, findFoodByFdcId } from './services/foods'
+import { getUserFoods, addFood, updateFood, deleteFood, calculateCalories, calculateCaloriesForFood, getFoodCalorieMode, seedDefaultFoods, importUSDAFood, findFoodByFdcId } from './services/foods'
 import { addWeightEntry, getWeightEntries, updateWeightEntry, deleteWeightEntry } from './services/weights'
 import { getDailySummaries, calculateStreak, hasDailySummaries, backfillDailySummaries } from './services/dailySummary'
+import { getLogicalToday } from './services/dateUtils'
 import Navigation from './components/Navigation'
 import TodayView from './components/views/TodayView'
 import FoodsView from './components/views/FoodsView'
@@ -37,6 +38,8 @@ function App() {
   const [showFoodForm, setShowFoodForm] = useState(false)
   const [foodFormName, setFoodFormName] = useState('')
   const [foodFormCalories, setFoodFormCalories] = useState('')
+  const [foodFormCalorieMode, setFoodFormCalorieMode] = useState('per100g')
+  const [foodFormCaloriesPerItem, setFoodFormCaloriesPerItem] = useState('')
   const [foodError, setFoodError] = useState(null)
   const [foodLoading, setFoodLoading] = useState(false)
   const [editingFoodId, setEditingFoodId] = useState(null)
@@ -44,6 +47,7 @@ function App() {
   // Entry form state
   const [selectedFoodId, setSelectedFoodId] = useState('')
   const [grams, setGrams] = useState('')
+  const [quantity, setQuantity] = useState('') // For item-based foods
   const [calculatedCalories, setCalculatedCalories] = useState(0)
   const [entryError, setEntryError] = useState(null)
   const [entryLoading, setEntryLoading] = useState(false)
@@ -111,18 +115,26 @@ function App() {
     setTotalCalories(total)
   }, [entries])
 
-  // Calculate calories when food or grams change
+  // Calculate calories when food, grams, or quantity change
   useEffect(() => {
-    if (selectedFoodId && grams) {
+    if (selectedFoodId) {
       const food = foods.find(f => f.id === selectedFoodId)
       if (food) {
-        const calories = calculateCalories(food.caloriesPer100g, parseFloat(grams))
-        setCalculatedCalories(calories)
+        const mode = getFoodCalorieMode(food)
+        if (mode === 'perItem' && quantity) {
+          const calories = calculateCaloriesForFood(food, parseFloat(quantity))
+          setCalculatedCalories(calories)
+        } else if (mode === 'per100g' && grams) {
+          const calories = calculateCaloriesForFood(food, parseFloat(grams))
+          setCalculatedCalories(calories)
+        } else {
+          setCalculatedCalories(0)
+        }
       }
     } else {
       setCalculatedCalories(0)
     }
-  }, [selectedFoodId, grams, foods])
+  }, [selectedFoodId, grams, quantity, foods])
 
   // Load stats data when entering stats tab
   useEffect(() => {
@@ -233,6 +245,8 @@ function App() {
     setEditingFoodId(null)
     setFoodFormName('')
     setFoodFormCalories('')
+    setFoodFormCalorieMode('per100g')
+    setFoodFormCaloriesPerItem('')
     setFoodError(null)
   }
 
@@ -240,7 +254,16 @@ function App() {
     setShowFoodForm(true)
     setEditingFoodId(food.id)
     setFoodFormName(food.name)
-    setFoodFormCalories(food.caloriesPer100g.toString())
+    // Handle calorie mode - default to per100g for backwards compatibility
+    const mode = food.calorieMode || 'per100g'
+    setFoodFormCalorieMode(mode)
+    if (mode === 'perItem') {
+      setFoodFormCaloriesPerItem(food.caloriesPerItem?.toString() || '')
+      setFoodFormCalories('')
+    } else {
+      setFoodFormCalories(food.caloriesPer100g?.toString() || '')
+      setFoodFormCaloriesPerItem('')
+    }
     setFoodError(null)
   }
 
@@ -249,6 +272,8 @@ function App() {
     setEditingFoodId(null)
     setFoodFormName('')
     setFoodFormCalories('')
+    setFoodFormCalorieMode('per100g')
+    setFoodFormCaloriesPerItem('')
     setFoodError(null)
   }
 
@@ -260,27 +285,48 @@ function App() {
       return
     }
 
-    const caloriesNum = parseFloat(foodFormCalories)
-    if (isNaN(caloriesNum) || caloriesNum <= 0) {
-      setFoodError('Please enter valid calories per 100g')
-      return
+    // Validate based on calorie mode
+    let caloriesNum, caloriesPerItemNum
+    if (foodFormCalorieMode === 'perItem') {
+      caloriesPerItemNum = parseFloat(foodFormCaloriesPerItem)
+      if (isNaN(caloriesPerItemNum) || caloriesPerItemNum <= 0) {
+        setFoodError('Please enter valid calories per item')
+        return
+      }
+    } else {
+      caloriesNum = parseFloat(foodFormCalories)
+      if (isNaN(caloriesNum) || caloriesNum <= 0) {
+        setFoodError('Please enter valid calories per 100g')
+        return
+      }
     }
 
     try {
       setFoodLoading(true)
       setFoodError(null)
 
+      const options = {
+        calorieMode: foodFormCalorieMode,
+        caloriesPerItem: caloriesPerItemNum,
+      }
+
       if (editingFoodId) {
         // Update existing food
-        await updateFood(user.uid, editingFoodId, foodFormName, caloriesNum)
+        await updateFood(user.uid, editingFoodId, foodFormName, caloriesNum, options)
         setFoods(foods.map(f =>
           f.id === editingFoodId
-            ? { ...f, name: foodFormName, caloriesPer100g: caloriesNum }
+            ? {
+                ...f,
+                name: foodFormName,
+                calorieMode: foodFormCalorieMode,
+                caloriesPer100g: foodFormCalorieMode === 'per100g' ? caloriesNum : null,
+                caloriesPerItem: foodFormCalorieMode === 'perItem' ? caloriesPerItemNum : null,
+              }
             : f
         ))
       } else {
         // Add new food
-        const newFood = await addFood(user.uid, foodFormName, caloriesNum)
+        const newFood = await addFood(user.uid, foodFormName, caloriesNum, options)
         setFoods([...foods, newFood].sort((a, b) => a.name.localeCompare(b.name)))
       }
 
@@ -315,7 +361,14 @@ function App() {
       // Food-based entry - open in Food mode
       setIsCustomMode(false)
       setSelectedFoodId(entry.foodId)
-      setGrams(entry.grams.toString())
+      // Check if this is an item-based entry
+      if (entry.quantityUnit === 'item') {
+        setQuantity(entry.quantity?.toString() || '')
+        setGrams('')
+      } else {
+        setGrams(entry.grams?.toString() || '')
+        setQuantity('')
+      }
       setCustomName('')
       setCustomCalories('')
     } else {
@@ -323,6 +376,7 @@ function App() {
       setIsCustomMode(true)
       setSelectedFoodId('')
       setGrams('')
+      setQuantity('')
       setCustomName(entry.foodName)
       setCustomCalories(entry.calories.toString())
     }
@@ -333,6 +387,7 @@ function App() {
     setIsCustomMode(false)
     setSelectedFoodId('')
     setGrams('')
+    setQuantity('')
     setCalculatedCalories(0)
     setCustomName('')
     setCustomCalories('')
@@ -345,6 +400,7 @@ function App() {
     // Clear food mode inputs
     setSelectedFoodId('')
     setGrams('')
+    setQuantity('')
     setCalculatedCalories(0)
     setEntryError(null)
   }
@@ -406,25 +462,49 @@ function App() {
         setEntryError('Please select a food')
         return
       }
-      const gramsNum = parseFloat(grams)
-      if (isNaN(gramsNum) || gramsNum <= 0) {
-        setEntryError('Please enter a valid amount in grams')
-        return
+
+      const food = foods.find(f => f.id === selectedFoodId)
+      const mode = getFoodCalorieMode(food)
+
+      // Validate based on food mode
+      let quantityNum, quantityUnit
+      if (mode === 'perItem') {
+        quantityNum = parseFloat(quantity)
+        quantityUnit = 'item'
+        if (isNaN(quantityNum) || quantityNum <= 0) {
+          setEntryError('Please enter a valid number of items')
+          return
+        }
+      } else {
+        quantityNum = parseFloat(grams)
+        quantityUnit = 'g'
+        if (isNaN(quantityNum) || quantityNum <= 0) {
+          setEntryError('Please enter a valid amount in grams')
+          return
+        }
       }
 
       try {
         setEntryLoading(true)
         setEntryError(null)
 
-        const food = foods.find(f => f.id === selectedFoodId)
-        const calories = calculateCalories(food.caloriesPer100g, gramsNum)
+        const calories = calculateCaloriesForFood(food, quantityNum)
+        const entryOptions = { quantity: quantityNum, quantityUnit }
 
         if (editingEntryId) {
           // Update existing entry
-          await updateEntry(user.uid, editingEntryId, selectedFoodId, food.name, gramsNum, calories)
+          await updateEntry(user.uid, editingEntryId, selectedFoodId, food.name, null, calories, entryOptions)
           setEntries(entries.map(e =>
             e.id === editingEntryId
-              ? { ...e, foodId: selectedFoodId, foodName: food.name, grams: gramsNum, calories }
+              ? {
+                  ...e,
+                  foodId: selectedFoodId,
+                  foodName: food.name,
+                  grams: quantityUnit === 'g' ? quantityNum : undefined,
+                  quantity: quantityNum,
+                  quantityUnit,
+                  calories
+                }
               : e
           ))
           setEditingEntryId(null)
@@ -434,8 +514,9 @@ function App() {
             user.uid,
             selectedFoodId,
             food.name,
-            gramsNum,
-            calories
+            null,
+            calories,
+            entryOptions
           )
           setEntries([newEntry, ...entries])
         }
@@ -443,6 +524,7 @@ function App() {
         // Reset to default state (Food mode, no selection)
         setSelectedFoodId('')
         setGrams('')
+        setQuantity('')
         setCalculatedCalories(0)
       } catch (err) {
         setEntryError(err.message)
@@ -544,7 +626,7 @@ function App() {
       // Refresh stats data
       await loadStatsData()
       // Also refresh today's entries if the deleted date is today
-      const today = new Date().toISOString().split('T')[0]
+      const today = getLogicalToday()
       if (date === today) {
         const todaysEntries = await getTodaysEntries(user.uid)
         setEntries(todaysEntries)
@@ -684,6 +766,8 @@ function App() {
             setSelectedFoodId={setSelectedFoodId}
             grams={grams}
             setGrams={setGrams}
+            quantity={quantity}
+            setQuantity={setQuantity}
             calculatedCalories={calculatedCalories}
             entryError={entryError}
             entryLoading={entryLoading}
@@ -726,6 +810,10 @@ function App() {
             setFoodFormName={setFoodFormName}
             foodFormCalories={foodFormCalories}
             setFoodFormCalories={setFoodFormCalories}
+            foodFormCalorieMode={foodFormCalorieMode}
+            setFoodFormCalorieMode={setFoodFormCalorieMode}
+            foodFormCaloriesPerItem={foodFormCaloriesPerItem}
+            setFoodFormCaloriesPerItem={setFoodFormCaloriesPerItem}
             foodError={foodError}
             foodLoading={foodLoading}
             editingFoodId={editingFoodId}

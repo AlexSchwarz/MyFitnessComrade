@@ -577,6 +577,42 @@
   flex: 1;
 }
 
+/* Calorie Mode Selector */
+.calorie-mode-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.calorie-mode-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.calorie-mode-btn:hover:not(:disabled) {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.calorie-mode-btn-active {
+  background-color: var(--accent-bg);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.calorie-mode-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Foods List */
 .foods-list {
   display: flex;

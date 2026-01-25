@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Pencil, Trash2, Database } from 'lucide-react'
 import FoodPicker from '../FoodPicker'
 import { useTheme } from '../../contexts/ThemeContext'
+import { getFoodCalorieLabel } from '../../services/foods'
 
 function FoodsView({
   foods,
@@ -10,6 +11,10 @@ function FoodsView({
   setFoodFormName,
   foodFormCalories,
   setFoodFormCalories,
+  foodFormCalorieMode,
+  setFoodFormCalorieMode,
+  foodFormCaloriesPerItem,
+  setFoodFormCaloriesPerItem,
   foodError,
   foodLoading,
   editingFoodId,
@@ -50,15 +55,49 @@ function FoodsView({
               disabled={foodLoading}
               className="input"
             />
-            <input
-              type="number"
-              step="0.1"
-              value={foodFormCalories}
-              onChange={(e) => setFoodFormCalories(e.target.value)}
-              placeholder="Calories per 100g"
-              disabled={foodLoading}
-              className="input"
-            />
+
+            {/* Calorie Mode Selector */}
+            <div className="calorie-mode-selector">
+              <button
+                type="button"
+                className={`calorie-mode-btn ${foodFormCalorieMode === 'per100g' ? 'calorie-mode-btn-active' : ''}`}
+                onClick={() => setFoodFormCalorieMode('per100g')}
+                disabled={foodLoading}
+              >
+                Per 100g
+              </button>
+              <button
+                type="button"
+                className={`calorie-mode-btn ${foodFormCalorieMode === 'perItem' ? 'calorie-mode-btn-active' : ''}`}
+                onClick={() => setFoodFormCalorieMode('perItem')}
+                disabled={foodLoading}
+              >
+                Per item
+              </button>
+            </div>
+
+            {/* Conditional calorie input based on mode */}
+            {foodFormCalorieMode === 'perItem' ? (
+              <input
+                type="number"
+                step="0.1"
+                value={foodFormCaloriesPerItem}
+                onChange={(e) => setFoodFormCaloriesPerItem(e.target.value)}
+                placeholder="Calories per item"
+                disabled={foodLoading}
+                className="input"
+              />
+            ) : (
+              <input
+                type="number"
+                step="0.1"
+                value={foodFormCalories}
+                onChange={(e) => setFoodFormCalories(e.target.value)}
+                placeholder="Calories per 100g"
+                disabled={foodLoading}
+                className="input"
+              />
+            )}
 
             {foodError && (
               <div className="error">
@@ -119,7 +158,7 @@ function FoodsView({
                 <span className="food-name">{food.name}</span>
                 <div className="food-details">
                   {!lessNumbersMode && (
-                    <span className="food-calories">{food.caloriesPer100g} cal/100g</span>
+                    <span className="food-calories">{getFoodCalorieLabel(food)}</span>
                   )}
                   <div className="food-actions">
                     <button
