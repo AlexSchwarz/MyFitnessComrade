@@ -136,6 +136,13 @@ function App() {
     }
   }, [selectedFoodId, grams, quantity, foods])
 
+  // Refresh today's entries when switching to calories tab
+  useEffect(() => {
+    if (user && currentTab === 'calories') {
+      refreshTodaysEntries()
+    }
+  }, [user, currentTab])
+
   // Load stats data when entering stats tab
   useEffect(() => {
     if (user && currentTab === 'stats') {
@@ -192,6 +199,15 @@ function App() {
       setWeightEntries(userWeightEntries)
     } catch (err) {
       console.error('Error loading user data:', err)
+    }
+  }
+
+  const refreshTodaysEntries = async () => {
+    try {
+      const todaysEntries = await getTodaysEntries(user.uid)
+      setEntries(todaysEntries)
+    } catch (err) {
+      console.error('Error refreshing entries:', err)
     }
   }
 
