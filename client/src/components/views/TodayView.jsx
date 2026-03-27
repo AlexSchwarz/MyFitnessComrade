@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Pencil, Trash2, X } from 'lucide-react'
+import { Pencil, Trash2, X, Calculator as CalculatorIcon } from 'lucide-react'
+import Calculator from '../Calculator'
 import FoodPicker from '../FoodPicker'
 import USDAImportModal from '../USDAImportModal'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -84,6 +85,7 @@ function TodayView({
   }
 
   // Determine if submit should be disabled
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false)
   const isItemMode = selectedFood && getFoodCalorieMode(selectedFood) === 'perItem'
   const isSubmitDisabled = entryLoading || (
     isCustomMode
@@ -178,7 +180,7 @@ function TodayView({
             <button
               type="button"
               className="mode-toggle-btn"
-              onClick={isCustomMode ? handleSwitchToFoodMode : handleSwitchToCustomMode}
+              onClick={isCustomMode ? () => { setIsCalculatorOpen(false); handleSwitchToFoodMode() } : handleSwitchToCustomMode}
               disabled={entryLoading}
             >
               {isCustomMode ? 'Food' : 'Custom'}
@@ -220,7 +222,26 @@ function TodayView({
                 >
                   Clear
                 </button>
+                <button
+                  type="button"
+                  className={`quick-add-btn calc-toggle-btn ${isCalculatorOpen ? 'active' : ''}`}
+                  onClick={() => setIsCalculatorOpen(prev => !prev)}
+                  disabled={entryLoading}
+                  aria-label="Toggle calculator"
+                >
+                  <CalculatorIcon size={16} />
+                </button>
               </div>
+              {isCalculatorOpen && (
+                <Calculator
+                  initialValue={customCalories}
+                  onUseResult={(val) => {
+                    setCustomCalories(val)
+                    setIsCalculatorOpen(false)
+                  }}
+                  onClose={() => setIsCalculatorOpen(false)}
+                />
+              )}
               <input
                 type="number"
                 value={customCalories}

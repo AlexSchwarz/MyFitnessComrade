@@ -884,6 +884,120 @@
   background-color: var(--border-light);
 }
 
+/* Calculator */
+.calc-toggle-btn {
+  flex: 0 0 auto;
+  width: 2.5rem;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.calc-toggle-btn.active {
+  background-color: var(--accent-color);
+  color: var(--bg-card);
+}
+
+.calc-toggle-btn:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  color: var(--bg-card);
+}
+
+.calculator-panel {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.calc-display {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  text-align: right;
+  min-height: 2.5rem;
+  overflow-x: auto;
+}
+
+.calc-display-expression {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.calc-display-result {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.calc-display-error {
+  color: var(--error-color, #ef4444);
+}
+
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.calc-btn {
+  min-height: 44px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.calc-btn:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+.calc-btn-operator {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.calc-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.calc-btn-calculate {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+  font-size: 1.2rem;
+}
+
+.calc-btn-use-result {
+  background-color: var(--accent-color);
+  color: var(--bg-card);
+}
+
+.calc-btn-use-result:disabled {
+  background-color: var(--border-color);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
 /* Food Picker Modal */
 .food-picker-overlay {
   position: fixed;
