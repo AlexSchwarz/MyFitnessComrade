@@ -216,20 +216,20 @@ function TodayView({
                 </button>
                 <button
                   type="button"
-                  className="quick-add-btn quick-add-btn-clear"
-                  onClick={() => setCustomCalories('')}
-                  disabled={entryLoading || !customCalories}
-                >
-                  Clear
-                </button>
-                <button
-                  type="button"
                   className={`quick-add-btn calc-toggle-btn ${isCalculatorOpen ? 'active' : ''}`}
                   onClick={() => setIsCalculatorOpen(prev => !prev)}
                   disabled={entryLoading}
                   aria-label="Toggle calculator"
                 >
                   <CalculatorIcon size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="quick-add-btn quick-add-btn-clear"
+                  onClick={() => setCustomCalories('')}
+                  disabled={entryLoading || !customCalories}
+                >
+                  Clear
                 </button>
               </div>
               {isCalculatorOpen && (

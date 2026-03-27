@@ -886,8 +886,7 @@
 
 /* Calculator */
 .calc-toggle-btn {
-  flex: 0 0 auto;
-  width: 2.5rem;
+  flex: 1;
   padding: 0.5rem;
   display: flex;
   align-items: center;
@@ -931,16 +930,6 @@
   word-break: break-all;
 }
 
-.calc-display-result {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-top: 0.25rem;
-}
-
-.calc-display-error {
-  color: var(--error-color, #ef4444);
-}
-
 .calc-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -977,8 +966,13 @@
 
 .calc-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 0.5rem;
+}
+
+.calc-btn-clear {
+  background-color: var(--border-color);
+  color: var(--text-primary);
 }
 
 .calc-btn-calculate {

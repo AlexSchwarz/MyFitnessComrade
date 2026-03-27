@@ -75,16 +75,12 @@ function evaluateExpression(expr) {
 
 function Calculator({ initialValue, onUseResult }) {
   const [expression, setExpression] = useState(initialValue && !isNaN(parseFloat(initialValue)) ? initialValue : '')
-  const [result, setResult] = useState(null)
-  const [error, setError] = useState(false)
 
   const operators = ['+', '−', '×', '÷']
   const operatorChars = ['+', '-', '×', '÷']
 
   const handleDigit = (digit) => {
     setExpression(prev => prev + digit)
-    setResult(null)
-    setError(false)
   }
 
   const handleOperator = (op) => {
@@ -97,8 +93,6 @@ function Calculator({ initialValue, onUseResult }) {
       }
       return prev + op
     })
-    setResult(null)
-    setError(false)
   }
 
   const handleDecimal = () => {
@@ -109,44 +103,33 @@ function Calculator({ initialValue, onUseResult }) {
       if (currentNum.includes('.')) return prev
       return prev + '.'
     })
-    setResult(null)
-    setError(false)
   }
 
   const handleBackspace = () => {
     setExpression(prev => prev.slice(0, -1))
-    setResult(null)
-    setError(false)
   }
 
   const handleCalculate = () => {
     const val = evaluateExpression(expression)
-    if (val === null) {
-      setError(true)
-      setResult(null)
-    } else {
-      setResult(String(val % 1 === 0 ? val : val))
-      setError(false)
+    if (val !== null) {
+      setExpression(String(val))
     }
   }
 
   const handleUseResult = () => {
-    if (result !== null) {
-      onUseResult(result)
+    if (expression) {
+      onUseResult(expression)
     }
   }
 
-  const displayResult = result !== null ? result : error ? 'Error' : null
+  const handleClear = () => {
+    setExpression('')
+  }
 
   return (
     <div className="calculator-panel">
       <div className="calc-display">
         <div className="calc-display-expression">{expression || '0'}</div>
-        {displayResult !== null && (
-          <div className={`calc-display-result ${error ? 'calc-display-error' : ''}`}>
-            {error ? 'Invalid expression' : `= ${result}`}
-          </div>
-        )}
       </div>
 
       <div className="calc-grid">
@@ -169,16 +152,19 @@ function Calculator({ initialValue, onUseResult }) {
       </div>
 
       <div className="calc-actions">
-        <button type="button" className="calc-btn calc-btn-calculate" onClick={handleCalculate}>
-          =
-        </button>
         <button
           type="button"
           className="calc-btn calc-btn-use-result"
           onClick={handleUseResult}
-          disabled={result === null}
+          disabled={!expression}
         >
-          ✓ Use {result !== null ? result : ''}
+          ✓
+        </button>
+        <button type="button" className="calc-btn calc-btn-clear" onClick={handleClear}>
+          C
+        </button>
+        <button type="button" className="calc-btn calc-btn-calculate" onClick={handleCalculate}>
+          =
         </button>
       </div>
     </div>
