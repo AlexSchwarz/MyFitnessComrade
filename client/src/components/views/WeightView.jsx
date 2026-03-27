@@ -161,7 +161,7 @@ function WeightView({
         ) : (
           <div className="weight-chart-container">
             <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <LineChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
                 {weekAreas.map((area, i) => (
                   <ReferenceArea
