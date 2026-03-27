@@ -709,9 +709,9 @@
 }
 
 .mode-toggle-btn {
-  padding: 0.5rem 0.75rem;
+  padding: 0.6rem 0.75rem;
   border-radius: 4px;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -720,7 +720,7 @@
   background-color: transparent;
   color: var(--text-secondary);
   border: 1px solid var(--border-light);
-  min-width: 4.5rem;
+  width: 5.5rem;
   text-align: center;
 }
 
