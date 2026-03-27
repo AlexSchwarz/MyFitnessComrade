@@ -800,9 +800,6 @@ function App() {
             entries={entries}
             handleEditEntry={handleEditEntry}
             handleDeleteEntry={handleDeleteEntry}
-            onUSDAImport={handleUSDAImport}
-            usdaImportLoading={usdaImportLoading}
-            findExistingUSDAFood={findExistingUSDAFood}
           />
         )
       case 'stats':

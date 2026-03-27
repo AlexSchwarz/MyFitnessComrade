@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Pencil, Trash2, X, Calculator as CalculatorIcon } from 'lucide-react'
 import Calculator from '../Calculator'
 import FoodPicker from '../FoodPicker'
-import USDAImportModal from '../USDAImportModal'
 import { useTheme } from '../../contexts/ThemeContext'
 import { getFoodCalorieMode, getFoodCalorieLabel } from '../../services/foods'
 
@@ -39,15 +38,9 @@ function TodayView({
   entries,
   handleEditEntry,
   handleDeleteEntry,
-  // USDA import props
-  onUSDAImport,
-  usdaImportLoading,
-  findExistingUSDAFood,
 }) {
   const { lessNumbersMode } = useTheme()
   const [isPickerOpen, setIsPickerOpen] = useState(false)
-  const [usdaImportFood, setUsdaImportFood] = useState(null)
-  const [existingUSDAFood, setExistingUSDAFood] = useState(null)
 
   const selectedFood = foods.find(f => f.id === selectedFoodId)
 
@@ -55,34 +48,6 @@ function TodayView({
     setSelectedFoodId(food.id)
   }
 
-  const handleUSDASelect = async (usdaFood) => {
-    // Check for existing import
-    const existing = findExistingUSDAFood ? findExistingUSDAFood(usdaFood.fdcId) : null
-    setExistingUSDAFood(existing)
-    setUsdaImportFood(usdaFood)
-  }
-
-  const handleUSDAImport = async (foodData) => {
-    const importedFood = await onUSDAImport(foodData)
-    if (importedFood) {
-      // Select the newly imported food
-      setSelectedFoodId(importedFood.id)
-      // Close modals
-      setUsdaImportFood(null)
-      setExistingUSDAFood(null)
-      setIsPickerOpen(false)
-    }
-  }
-
-  const handleUSDAImportClose = (existingFoodToSelect) => {
-    if (existingFoodToSelect) {
-      // User chose to use existing food
-      setSelectedFoodId(existingFoodToSelect.id)
-      setIsPickerOpen(false)
-    }
-    setUsdaImportFood(null)
-    setExistingUSDAFood(null)
-  }
 
   // Determine if submit should be disabled
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false)
@@ -448,17 +413,7 @@ function TodayView({
         isOpen={isPickerOpen}
         onClose={() => setIsPickerOpen(false)}
         onSelect={handleFoodSelect}
-        onUSDASelect={handleUSDASelect}
         lessNumbersMode={lessNumbersMode}
-      />
-
-      <USDAImportModal
-        isOpen={usdaImportFood !== null}
-        usdaFood={usdaImportFood}
-        onClose={handleUSDAImportClose}
-        onImport={handleUSDAImport}
-        existingFood={existingUSDAFood}
-        importLoading={usdaImportLoading}
       />
     </>
   )

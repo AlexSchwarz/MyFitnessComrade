@@ -133,8 +133,8 @@ function FoodPicker({ foods, isOpen, onClose, onSelect, onUSDASelect, defaultSou
           </button>
         </div>
 
-        {/* Source Toggle - only show when not usdaOnly */}
-        {!usdaOnly && (
+        {/* Source Toggle - only show when not usdaOnly and USDA handler exists */}
+        {!usdaOnly && onUSDASelect && (
           <div className="food-picker-source-toggle">
             <button
               className={`source-toggle-btn ${source === 'my-foods' ? 'active' : ''}`}
