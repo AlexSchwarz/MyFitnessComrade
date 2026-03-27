@@ -1,5 +1,5 @@
 import { Pencil, Trash2 } from 'lucide-react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea } from 'recharts'
 import { useTheme } from '../../contexts/ThemeContext'
 
 function WeightView({
@@ -80,6 +80,52 @@ function WeightView({
     yTicks.push(tick)
   }
 
+  // Generate alternating week shading and month boundary lines
+  const weekAreas = []
+  const monthLines = []
+  if (chartData.length >= 2) {
+    const firstTs = chartData[0].timestamp
+    const lastTs = chartData[chartData.length - 1].timestamp
+
+    // Find the first Monday on or before the first data point
+    const firstDate = new Date(firstTs)
+    const dayOfWeek = firstDate.getDay()
+    const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    const firstMonday = new Date(firstDate)
+    firstMonday.setHours(0, 0, 0, 0)
+    firstMonday.setDate(firstMonday.getDate() - mondayOffset)
+
+    // Generate week bands
+    let weekStart = firstMonday.getTime()
+    let weekIndex = 0
+    while (weekStart < lastTs) {
+      const weekEnd = weekStart + 7 * 24 * 60 * 60 * 1000
+      if (weekEnd > firstTs) {
+        weekAreas.push({
+          x1: Math.max(weekStart, firstTs),
+          x2: Math.min(weekEnd, lastTs),
+          isEven: weekIndex % 2 === 0,
+        })
+      }
+      weekStart = weekEnd
+      weekIndex++
+    }
+
+    // Find first day of each month in range
+    const startDate = new Date(firstTs)
+    let current = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 1)
+    while (current.getTime() <= lastTs) {
+      const ts = current.getTime()
+      if (ts > firstTs) {
+        monthLines.push({
+          x: ts,
+          label: current.toLocaleDateString('en-US', { month: 'short' }),
+        })
+      }
+      current = new Date(current.getFullYear(), current.getMonth() + 1, 1)
+    }
+  }
+
   // Get chart title based on selected days
   const getChartTitle = () => {
     if (selectedDays >= 9999) return 'All Time'
@@ -116,7 +162,26 @@ function WeightView({
           <div className="weight-chart-container">
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
+                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
+                {weekAreas.map((area, i) => (
+                  <ReferenceArea
+                    key={`week-${i}`}
+                    x1={area.x1}
+                    x2={area.x2}
+                    fill={area.isEven ? (mode === 'dark' ? '#ffffff' : '#000000') : 'transparent'}
+                    fillOpacity={0.03}
+                    ifOverflow="hidden"
+                  />
+                ))}
+                {monthLines.map((line, i) => (
+                  <ReferenceLine
+                    key={`month-${i}`}
+                    x={line.x}
+                    stroke={mode === 'dark' ? '#555' : '#999'}
+                    strokeWidth={1.5}
+                    label={{ value: line.label, position: 'top', fontSize: 10, fill: colors.axis }}
+                  />
+                ))}
                 <XAxis
                   dataKey="timestamp"
                   type="number"
