@@ -47,6 +47,7 @@ function WeightView({
     .map(entry => {
       const entryDate = new Date(entry.entryTime)
       return {
+        timestamp: entryDate.getTime(),
         date: entryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         time: entryDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
         weight: entry.weight,
@@ -117,11 +118,15 @@ function WeightView({
               <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
                 <XAxis
-                  dataKey="date"
+                  dataKey="timestamp"
+                  type="number"
+                  scale="time"
+                  domain={['dataMin', 'dataMax']}
                   stroke={colors.axis}
                   fontSize={12}
                   tickLine={false}
                   padding={{ left: 20, right: 20 }}
+                  tickFormatter={(ts) => new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 />
                 <YAxis
                   stroke={colors.axis}
@@ -139,11 +144,12 @@ function WeightView({
                     color: colors.tooltipText
                   }}
                   labelStyle={{ color: colors.tooltipLabel }}
-                  labelFormatter={(label, payload) => {
+                  labelFormatter={(ts, payload) => {
+                    const dateStr = new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                     if (payload && payload[0]) {
-                      return `${label} at ${payload[0].payload.time}`
+                      return `${dateStr} at ${payload[0].payload.time}`
                     }
-                    return label
+                    return dateStr
                   }}
                 />
                 <Line
