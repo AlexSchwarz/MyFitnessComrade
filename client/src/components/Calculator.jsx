@@ -156,7 +156,7 @@ function Calculator({ initialValue, onUseResult }) {
           type="button"
           className="calc-btn calc-btn-use-result"
           onClick={handleUseResult}
-          disabled={!expression || !Number.isInteger(parseFloat(expression)) || parseFloat(expression) <= 0}
+          disabled={!expression || !/^\d+$/.test(expression)}
         >
           ✓
         </button>
