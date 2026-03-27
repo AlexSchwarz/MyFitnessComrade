@@ -133,7 +133,7 @@ function Calculator({ initialValue, onUseResult }) {
       </div>
 
       <div className="calc-grid">
-        {['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−'].map(btn => (
+        {['7', '8', '9', '×', '4', '5', '6', '÷', '1', '2', '3', '+'].map(btn => (
           <button
             key={btn}
             type="button"
@@ -148,7 +148,7 @@ function Calculator({ initialValue, onUseResult }) {
         <button type="button" className="calc-btn" onClick={handleBackspace}>
           <Delete size={18} />
         </button>
-        <button type="button" className="calc-btn calc-btn-operator" onClick={() => handleOperator('+')}>+</button>
+        <button type="button" className="calc-btn calc-btn-operator" onClick={() => handleOperator('−')}>−</button>
       </div>
 
       <div className="calc-actions">
@@ -156,7 +156,7 @@ function Calculator({ initialValue, onUseResult }) {
           type="button"
           className="calc-btn calc-btn-use-result"
           onClick={handleUseResult}
-          disabled={!expression}
+          disabled={!expression || !Number.isInteger(parseFloat(expression)) || parseFloat(expression) <= 0}
         >
           ✓
         </button>
